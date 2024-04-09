@@ -16,41 +16,32 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+package org.unigrid.hedgehog.model.network.handler;
 
-package org.unigrid.hedgehog.model.network.schedule;
-
-import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
 import org.unigrid.hedgehog.model.cdi.CDIUtil;
 import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.Topology;
+import org.unigrid.hedgehog.model.network.packet.AskGridnodeDetails;
 import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 
-@Data
-@Slf4j
-@EqualsAndHashCode(callSuper = false)
-public class PublishGridnodeSchedule extends AbstractSchedule implements Schedulable {
-	public PublishGridnodeSchedule() {
-		super(PublishGridnode.DISTRIBUTION_FREQUENCY_MINUTES, TimeUnit.MINUTES, false);
-		log.atDebug().log("Init");
+public class AskGridnodeDetailsChannelHandler extends AbstractInboundHandler<AskGridnodeDetails> {
+	public AskGridnodeDetailsChannelHandler() {
+		super(AskGridnodeDetails.class);
 	}
 
+	//TODO: change so it only sends to the one asking for the information.
 	@Override
-	public Consumer<Channel> getConsumer() {
-		return channel -> {
-			CDIUtil.resolveAndRun(Topology.class, topology -> {
-				final Set<Gridnode> gridnodesToSend = topology.cloneGridnode();
-
-				gridnodesToSend.forEach((g) -> {
-					log.atTrace().log("Sending gridnode");
-					channel.writeAndFlush(PublishGridnode.builder().gridnode(g).build());
-				});
+	public void typedChannelRead(ChannelHandlerContext context, AskGridnodeDetails askGridnodeDetails) throws Exception {
+		CDIUtil.resolveAndRun(Topology.class, topology -> {
+			final Set<Gridnode> gridnodes = topology.cloneGridnode();
+			
+			gridnodes.forEach((g) -> {
+				Topology.sendAll(PublishGridnode.builder().gridnode(g).build(),
+							topology, Optional.empty());
 			});
-		};
+		});
 	}
 }

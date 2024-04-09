@@ -23,6 +23,7 @@ import org.unigrid.hedgehog.command.cli.GridSporkGet;
 import org.unigrid.hedgehog.command.cli.GridSporkGrow;
 import org.unigrid.hedgehog.command.cli.GridSporkList;
 import org.unigrid.hedgehog.command.cli.GridSporkSet;
+import org.unigrid.hedgehog.command.cli.GridnodeGet;
 import org.unigrid.hedgehog.command.cli.GridnodeList;
 import org.unigrid.hedgehog.command.cli.NodeAdd;
 import org.unigrid.hedgehog.command.cli.NodeList;
@@ -35,9 +36,9 @@ import org.unigrid.hedgehog.command.option.RestOptions;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
 
-@Command(name = "cli", subcommands = { GridnodeList.class, GridSporkGet.class, GridSporkGrow.class, GridSporkSet.class,
-	GridSporkList.class, NodeAdd.class, NodeRemove.class, NodeList.class, ValidatorGrow.class, ValidatorGet.class,
-	Stop.class
+@Command(name = "cli", subcommands = { GridnodeGet.class, GridnodeList.class, GridSporkGet.class, GridSporkGrow.class,
+	GridSporkSet.class, GridSporkList.class, NodeAdd.class, NodeRemove.class, NodeList.class, ValidatorGrow.class,
+	ValidatorGet.class, Stop.class
 })
 public class CLI {
 	@Mixin private NetOptions netOptions;

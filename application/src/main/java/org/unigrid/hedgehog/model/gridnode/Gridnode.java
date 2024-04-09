@@ -32,7 +32,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class GridnodeData {
+public class Gridnode {
 
 	@AllArgsConstructor
 	public enum Status {

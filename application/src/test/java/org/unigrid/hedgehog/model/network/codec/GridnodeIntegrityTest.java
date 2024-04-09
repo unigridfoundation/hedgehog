@@ -40,7 +40,7 @@ import net.jqwik.api.constraints.StringLength;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.tuple.Pair;
 import org.unigrid.hedgehog.jqwik.ArbitraryGenerator;
-import org.unigrid.hedgehog.model.gridnode.GridnodeData;
+import org.unigrid.hedgehog.model.gridnode.Gridnode;
 
 public class GridnodeIntegrityTest extends BaseCodecTest<PublishGridnode>{
 	@Mocked
@@ -52,7 +52,7 @@ public class GridnodeIntegrityTest extends BaseCodecTest<PublishGridnode>{
 
 		final PublishGridnode gp = PublishGridnode.builder().build();
 		final String ip = ArbitraryGenerator.ip4();
-		final GridnodeData gridnode = GridnodeData.builder().id(gridnodeKey).hostName(ip + ":" + port).build();
+		final Gridnode gridnode = Gridnode.builder().id(gridnodeKey).hostName(ip + ":" + port).build();
 		gp.setGridnode(gridnode);
 
 		return Arbitraries.of(gp);

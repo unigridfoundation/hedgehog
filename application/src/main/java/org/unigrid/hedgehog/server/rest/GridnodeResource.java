@@ -42,9 +42,10 @@ import org.unigrid.hedgehog.model.crypto.GridnodeKey;
 import org.unigrid.hedgehog.model.network.Topology;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
-import org.unigrid.hedgehog.model.gridnode.GridnodeData;
+import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.gridnode.HeartbeatData;
 import org.unigrid.hedgehog.model.network.ActivateGridnode;
+import org.unigrid.hedgehog.model.network.packet.AskGridnodeDetails;
 import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 import org.unigrid.hedgehog.model.spork.SporkDatabase;
 import org.unigrid.hedgehog.server.p2p.P2PServer;
@@ -67,11 +68,11 @@ public class GridnodeResource extends CDIBridgeResource {
 	@GET @Path("/collateral")
 	public Response get() {
 		// get number of gridnodes and calculate colleteral
-		Set<GridnodeData> gridnodes = topology.cloneGridnode();
+		Set<Gridnode> gridnodes = topology.cloneGridnode();
 		int count = 0;
 
-		for (GridnodeData g : gridnodes) {
-			if (g.getStatus() == GridnodeData.Status.ACTIVE) {
+		for (Gridnode g : gridnodes) {
+			if (g.getStatus() == Gridnode.Status.ACTIVE) {
 				count++;
 			}
 		}
@@ -83,7 +84,7 @@ public class GridnodeResource extends CDIBridgeResource {
 	@GET
 	@SneakyThrows
 	public Response list() {
-		Set<GridnodeData> gridnodes = topology.cloneGridnode();
+		Set<Gridnode> gridnodes = topology.cloneGridnode();
 
 		String json = "";
 		ObjectMapper mapper = new ObjectMapper();
@@ -113,12 +114,12 @@ public class GridnodeResource extends CDIBridgeResource {
 			byte[] messageBytes = gridnode.getGridnodeId().getBytes();
 			byte[] signBytes = Base64.getDecoder().decode(sign);
 			if (GridnodeKey.verifySignature(messageBytes, signBytes, pubKey)) {
-				final Set<GridnodeData> gridnodes = topology.cloneGridnode();
+				final Set<Gridnode> gridnodes = topology.cloneGridnode();
 				gridnodes.forEach(g -> {
 					if (g.getId().equals(gridnode.getGridnodeId())) {
 						log.atTrace().log("Activating node with id {}", g.getId());
 						topology.modifyGridnode(g, n -> {
-							n.setStatus(GridnodeData.Status.ACTIVE);
+							n.setStatus(Gridnode.Status.ACTIVE);
 						});
 						Topology.sendAll(PublishGridnode.builder().gridnode(g).build(),
 							topology, Optional.empty());
@@ -204,6 +205,14 @@ public class GridnodeResource extends CDIBridgeResource {
 
 		gridnodes.forEach(gridnode -> gridnode.setStatus(Gridnode.Status.INACTIVE));
 		return Response.status(Response.Status.OK).build();*/
+	}
+	
+	@Path("/repopulate")
+	@GET
+	public Response repopulate() {
+		Topology.sendAll(AskGridnodeDetails.builder().message((short) 1).build(),
+							topology, Optional.empty());
+		return Response.ok().build();
 	}
 
 	/*@Path("heartbeat/hash")

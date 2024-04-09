@@ -16,27 +16,27 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+package org.unigrid.hedgehog.command.cli;
 
-package org.unigrid.hedgehog.model.network.packet;
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.core.Response;
+import org.unigrid.hedgehog.command.util.RestClientCommand;
+import org.unigrid.hedgehog.model.Json;
+import picocli.CommandLine.Command;
 
-import java.io.Serializable;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.unigrid.hedgehog.model.gridnode.Gridnode;
+@Command(name = "gridnode-get")
+public class GridnodeGet implements Runnable{
 
-@Data
-@Builder
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-public class PublishGridnode extends Packet implements Serializable {
+	@Override
+	public void run() {
+		final RestClientCommand cmd = new RestClientCommand(HttpMethod.GET, "/gridnode/repopulate") {
+			@Override
+			protected void execute(Response response) {
+				System.out.println(Json.parse(response.readEntity(String.class)));
+			}
+		};
 
-	public static final int DISTRIBUTION_FREQUENCY_MINUTES = 2;
-
-	@Builder.Default private Gridnode gridnode = Gridnode.builder().build();
-
-	public PublishGridnode() {
-		setType(Packet.Type.GRIDNODE);
+		cmd.run();
 	}
+	
 }

@@ -16,41 +16,38 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+package org.unigrid.hedgehog.model.network.codec;
 
-package org.unigrid.hedgehog.model.network.schedule;
-
-import io.netty.channel.Channel;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
-import org.unigrid.hedgehog.model.cdi.CDIUtil;
-import org.unigrid.hedgehog.model.gridnode.Gridnode;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import jakarta.inject.Inject;
+import java.util.Optional;
+import org.unigrid.hedgehog.model.crypto.NetworkIdentifier;
 import org.unigrid.hedgehog.model.network.Topology;
+import org.unigrid.hedgehog.model.network.packet.AskGridnodeDetails;
+import org.unigrid.hedgehog.model.network.codec.api.PacketDecoder;
+import org.unigrid.hedgehog.model.network.packet.Packet;
 import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 
-@Data
-@Slf4j
-@EqualsAndHashCode(callSuper = false)
-public class PublishGridnodeSchedule extends AbstractSchedule implements Schedulable {
-	public PublishGridnodeSchedule() {
-		super(PublishGridnode.DISTRIBUTION_FREQUENCY_MINUTES, TimeUnit.MINUTES, false);
-		log.atDebug().log("Init");
+public class AskGridnodeDetailsDecoder extends AbstractReplayingDecoder<AskGridnodeDetails>
+	implements PacketDecoder<AskGridnodeDetails> {
+
+	@Inject
+	private Topology topology;
+
+	@Inject
+	private NetworkIdentifier id;
+
+	@Override
+	public Optional<AskGridnodeDetails> typedDecode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+		AskGridnodeDetails gridnodeDetails = AskGridnodeDetails.builder().message(in.readShort()).build();
+		
+		return Optional.of(gridnodeDetails);
 	}
 
 	@Override
-	public Consumer<Channel> getConsumer() {
-		return channel -> {
-			CDIUtil.resolveAndRun(Topology.class, topology -> {
-				final Set<Gridnode> gridnodesToSend = topology.cloneGridnode();
-
-				gridnodesToSend.forEach((g) -> {
-					log.atTrace().log("Sending gridnode");
-					channel.writeAndFlush(PublishGridnode.builder().gridnode(g).build());
-				});
-			});
-		};
+	public Packet.Type getCodecType() {
+		return Packet.Type.ASK_GRIDNODE_DETAILS;
 	}
+	
 }

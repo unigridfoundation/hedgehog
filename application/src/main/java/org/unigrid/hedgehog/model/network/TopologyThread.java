@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.unigrid.hedgehog.client.P2PClient;
 import org.unigrid.hedgehog.model.cdi.CDIUtil;
+import org.unigrid.hedgehog.model.gridnode.Gridnode;
 
 @Slf4j
 public class TopologyThread extends Thread {
@@ -69,6 +70,8 @@ public class TopologyThread extends Thread {
 				});
 
 				topology.removeNode(node);
+				topology.removeGridnode(Gridnode.builder().hostName(node.getAddress().getHostName())
+					.build());
 				log.atTrace().log("Removed node {} from topology", node);
 			}
 		}

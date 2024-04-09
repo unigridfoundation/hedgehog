@@ -38,14 +38,14 @@ import org.unigrid.hedgehog.command.option.NetOptions;
 import org.unigrid.hedgehog.model.Network;
 import org.unigrid.hedgehog.model.cdi.Lock;
 import org.unigrid.hedgehog.model.cdi.Protected;
-import org.unigrid.hedgehog.model.gridnode.GridnodeData;
+import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.packet.Packet;
 
 @Slf4j
 @ApplicationScoped
 public class Topology {
 	private HashSet<Node> nodes;
-	private HashSet<GridnodeData> gridnodes;
+	private HashSet<Gridnode> gridnodes;
 
 	@Inject
 	@Getter private ChannelMap channels;
@@ -55,7 +55,7 @@ public class Topology {
 		repopulate();
 		gridnodes = new HashSet<>();
 		if (!StringUtils.isEmpty(GridnodeOptions.getGridnodeKey())) {
-			gridnodes.add(GridnodeData.builder().id(GridnodeOptions.getGridnodeKey())
+			gridnodes.add(Gridnode.builder().id(GridnodeOptions.getGridnodeKey())
 				.hostName(NetOptions.getHost() + ":" + NetOptions.getPort()).build());
 		}
 	}
@@ -136,7 +136,7 @@ public class Topology {
 	}
 
 	@Protected @Lock(LockMode.WRITE)
-	public void modifyGridnode(GridnodeData gridnode, Consumer<GridnodeData> consumer)  {
+	public void modifyGridnode(Gridnode gridnode, Consumer<Gridnode> consumer)  {
 		gridnodes.forEach(g -> {
 			if (gridnode.equals(g)) {
 				consumer.accept(g);
@@ -144,15 +144,16 @@ public class Topology {
 		});
 	}
 
-	public void changeGridnodeStatus(String gridnodeId, GridnodeData.Status status) {
-		GridnodeData gridnode = GridnodeData.builder().id(gridnodeId).status(status).build();
+	@Protected @Lock(LockMode.WRITE)
+	public void changeGridnodeStatus(String gridnodeId, Gridnode.Status status) {
+		Gridnode gridnode = Gridnode.builder().id(gridnodeId).status(status).build();
 		modifyGridnode(gridnode, (g) -> {
 			g.setStatus(gridnode.getStatus());
 		});
 	}
 
 	@Protected @Lock(LockMode.WRITE)
-	public boolean addGridnode(GridnodeData gridnode) {
+	public boolean addGridnode(Gridnode gridnode) {
 		if (!gridnodes.contains(gridnode)) {
 			return gridnodes.add(gridnode);
 		}
@@ -161,7 +162,7 @@ public class Topology {
 	}
 
 	@Protected @Lock(LockMode.WRITE)
-	public boolean removeGridnode(GridnodeData gridnode) {
+	public boolean removeGridnode(Gridnode gridnode) {
 		if (!gridnodes.contains(gridnode)) {
 			return gridnodes.remove(gridnode);
 		}
@@ -170,7 +171,7 @@ public class Topology {
 	}
 
 	@Protected @Lock(LockMode.READ)
-	public Set<GridnodeData> cloneGridnode() {
+	public Set<Gridnode> cloneGridnode() {
 		return new HashSet(gridnodes);
 	}
 }
