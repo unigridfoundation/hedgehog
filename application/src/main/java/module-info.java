@@ -62,7 +62,9 @@ module org.unigrid.hedgehog {
 	requires org.graalvm.sdk;
 	requires org.unigrid.hedgehog.common;
 	requires jdk.crypto.ec;
-	requires org.bitcoinj.core;	
+	requires org.bitcoinj.core;
+	requires com.sun.jna.platform;
+	requires com.sun.jna;
 
 	opens org.unigrid.hedgehog.model.s3.entity to jakarta.xml.bind;
 	

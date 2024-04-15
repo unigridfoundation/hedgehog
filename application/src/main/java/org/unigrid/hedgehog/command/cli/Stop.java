@@ -19,16 +19,19 @@
 
 package org.unigrid.hedgehog.command.cli;
 
+import jakarta.inject.Inject;
 import org.unigrid.hedgehog.command.util.RestClientCommand;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
+import org.unigrid.hedgehog.model.HedgehogConfig;
 import picocli.CommandLine.Command;
 
 @Command(name = "stop")
 public class Stop extends RestClientCommand {
+
 	public Stop() {
-		super(HttpMethod.POST, "/stop");
+		super(HttpMethod.POST, "/stop", new HedgehogConfig());
 	}
 
 	@Override

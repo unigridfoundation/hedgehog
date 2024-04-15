@@ -19,13 +19,16 @@
 
 package org.unigrid.hedgehog.server.rest;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.unigrid.hedgehog.model.HedgehogConfig;
 import org.unigrid.hedgehog.model.cdi.CDIBridgeResource;
 import org.unigrid.hedgehog.model.cdi.CDIContext;
 import org.unigrid.hedgehog.server.rest.entity.VersionResponse;
@@ -34,10 +37,17 @@ import org.unigrid.hedgehog.server.rest.entity.VersionResponse;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class UtilResource extends CDIBridgeResource {
-	@Path("/stop") @POST
-	public Response stop() {
-		CDIContext.stop();
-		return Response.status(Response.Status.ACCEPTED).build();
+
+	private HedgehogConfig hedgehogConfig = new HedgehogConfig();
+
+	@Path("/stop/{username}/{password}") @POST
+	public Response stop(@NotNull @PathParam("username") String username,
+		@NotNull @PathParam("password") String password) {
+		if (hedgehogConfig.getUsername().equals(username) && hedgehogConfig.getPassword().equals(password)) {
+			CDIContext.stop();
+			return Response.status(Response.Status.ACCEPTED).build();
+		}
+		return Response.status(Response.Status.UNAUTHORIZED).build();
 	}
 
 	@Path("/version") @GET

@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.unigrid.hedgehog.client.ResponseOddityException;
 import org.unigrid.hedgehog.client.RestClient;
 import org.unigrid.hedgehog.command.option.RestOptions;
+import org.unigrid.hedgehog.model.HedgehogConfig;
 
 @RequiredArgsConstructor
 public class RestClientCommand implements Runnable {
@@ -46,6 +47,10 @@ public class RestClientCommand implements Runnable {
 	public RestClientCommand(String method, String location, Optional<Supplier<?>> defaultSupplier) {
 		this(method, location);
 		this.defaultSupplier = defaultSupplier;
+	}
+	
+	public RestClientCommand(String method, String location, HedgehogConfig config) {
+		this(method, location + "/" + config.getUsername() + "/" + config.getPassword());
 	}
 
 	private class MethodCallback {

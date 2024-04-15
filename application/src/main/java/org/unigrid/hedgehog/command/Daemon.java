@@ -26,6 +26,7 @@ import org.jboss.weld.environment.se.events.ContainerInitialized;
 import org.unigrid.hedgehog.command.option.GridnodeOptions;
 import org.unigrid.hedgehog.command.option.NetOptions;
 import org.unigrid.hedgehog.command.option.RestOptions;
+import org.unigrid.hedgehog.model.HedgehogConfig;
 import org.unigrid.hedgehog.model.cdi.CDIContext;
 import org.unigrid.hedgehog.server.p2p.P2PServer;
 import org.unigrid.hedgehog.server.rest.RestServer;
@@ -41,6 +42,7 @@ public class Daemon extends CDIContext implements Runnable {
 
 	@Inject private P2PServer p2pServer;
 	@Inject private RestServer restServer;
+	private HedgehogConfig hedgehogConfig = new HedgehogConfig();
 
 	@Override
 	protected void start(@Observes ContainerInitialized event) {
