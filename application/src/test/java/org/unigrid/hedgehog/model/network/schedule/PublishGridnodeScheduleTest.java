@@ -43,7 +43,7 @@ import org.unigrid.hedgehog.model.network.initializer.RegisterQuicChannelInitial
 import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 import org.unigrid.hedgehog.server.TestServer;
 
-public class PublishGridnodeScheduleTest extends BaseScheduleTest<PublishGridnodeSchedule, PublishGridnode, Void> {
+public class PublishGridnodeScheduleTest extends BaseScheduleTest<PublishAllGridnodesSchedule, PublishGridnode, Void> {
 	public static final int PERIOD_MS = 250;
 	public static final int WAIT_TIME_MS = 3000;
 	public static final double TOLERANCE = 0.3; /* 30% */
@@ -53,7 +53,7 @@ public class PublishGridnodeScheduleTest extends BaseScheduleTest<PublishGridnod
 
 
 	public PublishGridnodeScheduleTest() {
-		super(PERIOD_MS, TimeUnit.MILLISECONDS, PublishGridnodeSchedule.class);
+		super(PERIOD_MS, TimeUnit.MILLISECONDS, PublishAllGridnodesSchedule.class);
 	}
 
 	public List<ECKey> provideKeys(int num) {

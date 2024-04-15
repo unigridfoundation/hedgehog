@@ -46,23 +46,28 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.unigrid.hedgehog.model.Network;
 import org.unigrid.hedgehog.model.network.ConnectionContainer;
+import org.unigrid.hedgehog.model.network.codec.AskGridnodeDetailsEncoder;
 import org.unigrid.hedgehog.model.network.codec.FrameDecoder;
 import org.unigrid.hedgehog.model.network.codec.GridnodeDecoder;
 import org.unigrid.hedgehog.model.network.codec.GridnodeEncoder;
 import org.unigrid.hedgehog.model.network.codec.HelloEncoder;
 import org.unigrid.hedgehog.model.network.codec.PingDecoder;
 import org.unigrid.hedgehog.model.network.codec.PingEncoder;
+import org.unigrid.hedgehog.model.network.codec.PublishAllGridnodesDecoder;
+import org.unigrid.hedgehog.model.network.codec.PublishAllGridnodesEncoder;
 import org.unigrid.hedgehog.model.network.codec.PublishPeersDecoder;
 import org.unigrid.hedgehog.model.network.codec.PublishPeersEncoder;
 import org.unigrid.hedgehog.model.network.codec.PublishSporkDecoder;
 import org.unigrid.hedgehog.model.network.codec.PublishSporkEncoder;
+import org.unigrid.hedgehog.model.network.handler.AskGridnodeDetailsChannelHandler;
+import org.unigrid.hedgehog.model.network.handler.PublishAllGridnodesHandler;
 import org.unigrid.hedgehog.model.network.handler.PublishGridnodeChannelHandler;
 import org.unigrid.hedgehog.model.network.handler.PublishPeersChannelHandler;
 import org.unigrid.hedgehog.model.network.handler.PublishSporkChannelHandler;
 import org.unigrid.hedgehog.model.network.initializer.RegisterQuicChannelInitializer;
 import org.unigrid.hedgehog.model.network.schedule.PingSchedule;
 import org.unigrid.hedgehog.model.network.schedule.PublishAndSaveSporkSchedule;
-import org.unigrid.hedgehog.model.network.schedule.PublishGridnodeSchedule;
+import org.unigrid.hedgehog.model.network.schedule.PublishAllGridnodesSchedule;
 import org.unigrid.hedgehog.model.network.schedule.PublishPeersSchedule;
 
 public class P2PClient extends ConnectionContainer {
@@ -116,15 +121,17 @@ public class P2PClient extends ConnectionContainer {
 					new PingEncoder(), new PingDecoder(),
 					new PublishSporkEncoder(), new PublishSporkDecoder(),
 					new PublishPeersEncoder(), new PublishPeersDecoder(),
+					new AskGridnodeDetailsEncoder(), new PublishAllGridnodesDecoder(),
+					new PublishAllGridnodesEncoder(),
 					new PingChannelHandler(), new PublishSporkChannelHandler(),
-					new PublishPeersChannelHandler(), new PublishGridnodeChannelHandler()
+					new PublishPeersChannelHandler(), new PublishGridnodeChannelHandler(),
+					new AskGridnodeDetailsChannelHandler(), new PublishAllGridnodesHandler()
 				);
 			}, () -> {
-				return Arrays.asList(
-					new PingSchedule(),
+				return Arrays.asList(new PingSchedule(),
 					new PublishPeersSchedule(),
 					new PublishAndSaveSporkSchedule(),
-					new PublishGridnodeSchedule()
+					new PublishAllGridnodesSchedule()
 				);
 			}, RegisterQuicChannelInitializer.Type.CLIENT)
 		).sync().getNow();

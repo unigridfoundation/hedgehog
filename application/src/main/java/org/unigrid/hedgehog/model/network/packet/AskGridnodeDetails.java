@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class AskGridnodeDetails extends Packet implements Serializable {
-	@Builder.Default private short message;
+	private short message;
 
 	public AskGridnodeDetails() {
 		setType(Type.ASK_GRIDNODE_DETAILS);

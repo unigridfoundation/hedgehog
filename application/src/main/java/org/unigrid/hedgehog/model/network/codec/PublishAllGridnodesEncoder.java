@@ -19,35 +19,55 @@
 package org.unigrid.hedgehog.model.network.codec;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import jakarta.inject.Inject;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.unigrid.hedgehog.model.crypto.NetworkIdentifier;
+import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.Topology;
-import org.unigrid.hedgehog.model.network.packet.AskGridnodeDetails;
-import org.unigrid.hedgehog.model.network.codec.api.PacketDecoder;
+import org.unigrid.hedgehog.model.network.codec.api.PacketEncoder;
 import org.unigrid.hedgehog.model.network.packet.Packet;
+import org.unigrid.hedgehog.model.network.packet.PublishAllGridnodes;
 import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
+import org.unigrid.hedgehog.model.network.util.ByteBufUtils;
 
-public class AskGridnodeDetailsDecoder extends AbstractReplayingDecoder<AskGridnodeDetails>
-	implements PacketDecoder<AskGridnodeDetails> {
+@Slf4j
+public class PublishAllGridnodesEncoder extends AbstractMessageToByteEncoder<PublishAllGridnodes>
+	implements PacketEncoder<PublishAllGridnodes> {
+
+	private static final String MESSAGE = "publishAllGridnodes";
 
 	@Inject
 	private Topology topology;
 
 	@Inject
-	private NetworkIdentifier id;
+	private NetworkIdentifier identifier;
 
 	@Override
-	public Optional<AskGridnodeDetails> typedDecode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-		AskGridnodeDetails gridnodeDetails = AskGridnodeDetails.builder().message(in.readShort()).build();
-		System.out.println("decoding gridnode-get");
-		return Optional.of(gridnodeDetails);
+	public Optional<ByteBuf> encode(ChannelHandlerContext ctx, PublishAllGridnodes publishGridnodes) throws Exception {
+		final ByteBuf out = Unpooled.buffer();
+		log.atDebug().log("encode gridnode");
+
+		out.writeShort(publishGridnodes.getGridnodes().size());
+		out.writeZero(6 /* 48 bytes */);
+
+		for (Gridnode g : publishGridnodes.getGridnodes()) {
+			final byte[] id = g.getId().getBytes();
+
+			out.writeByte(g.getStatus().getValue());
+			out.writeZero(5);
+			out.writeShort(id.length);
+			out.writeBytes(id);
+			ByteBufUtils.writeNullTerminatedString(g.getHostName(), out);
+		}
+
+		return Optional.of(out);
 	}
 
 	@Override
 	public Packet.Type getCodecType() {
-		return Packet.Type.ASK_GRIDNODE_DETAILS;
+		return Packet.Type.GRIDNODE_ALL;
 	}
-	
 }

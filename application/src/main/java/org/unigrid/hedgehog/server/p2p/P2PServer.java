@@ -46,27 +46,32 @@ import org.unigrid.hedgehog.model.Network;
 import org.unigrid.hedgehog.model.cdi.Eager;
 import org.unigrid.hedgehog.model.gridnode.HeartbeatTimer;
 import org.unigrid.hedgehog.model.network.TopologyThread;
+import org.unigrid.hedgehog.model.network.codec.AskGridnodeDetailsDecoder;
 import org.unigrid.hedgehog.model.network.codec.FrameDecoder;
 import org.unigrid.hedgehog.model.network.codec.GridnodeDecoder;
 import org.unigrid.hedgehog.model.network.codec.GridnodeEncoder;
 import org.unigrid.hedgehog.model.network.codec.HelloDecoder;
 import org.unigrid.hedgehog.model.network.codec.PingDecoder;
 import org.unigrid.hedgehog.model.network.codec.PingEncoder;
+import org.unigrid.hedgehog.model.network.codec.PublishAllGridnodesDecoder;
+import org.unigrid.hedgehog.model.network.codec.PublishAllGridnodesEncoder;
 import org.unigrid.hedgehog.model.network.codec.PublishPeersDecoder;
 import org.unigrid.hedgehog.model.network.codec.PublishPeersEncoder;
 import org.unigrid.hedgehog.model.network.codec.PublishSporkDecoder;
 import org.unigrid.hedgehog.model.network.codec.PublishSporkEncoder;
+import org.unigrid.hedgehog.model.network.handler.AskGridnodeDetailsChannelHandler;
 import org.unigrid.hedgehog.model.network.handler.ConnectionHandler;
 import org.unigrid.hedgehog.model.network.handler.EncryptedTokenHandler;
 import org.unigrid.hedgehog.model.network.handler.PublishGridnodeChannelHandler;
 import org.unigrid.hedgehog.model.network.handler.HelloChannelHandler;
 import org.unigrid.hedgehog.model.network.handler.PingChannelHandler;
+import org.unigrid.hedgehog.model.network.handler.PublishAllGridnodesHandler;
 import org.unigrid.hedgehog.model.network.handler.PublishPeersChannelHandler;
 import org.unigrid.hedgehog.model.network.handler.PublishSporkChannelHandler;
 import org.unigrid.hedgehog.model.network.initializer.RegisterQuicChannelInitializer;
 import org.unigrid.hedgehog.model.network.schedule.PingSchedule;
 import org.unigrid.hedgehog.model.network.schedule.PublishAndSaveSporkSchedule;
-import org.unigrid.hedgehog.model.network.schedule.PublishGridnodeSchedule;
+import org.unigrid.hedgehog.model.network.schedule.PublishAllGridnodesSchedule;
 import org.unigrid.hedgehog.model.network.schedule.PublishPeersSchedule;
 import org.unigrid.hedgehog.server.AbstractServer;
 
@@ -107,16 +112,18 @@ public class P2PServer extends AbstractServer {
 					new PingEncoder(), new PingDecoder(),
 					new PublishSporkEncoder(), new PublishSporkDecoder(),
 					new PublishPeersEncoder(), new PublishPeersDecoder(),
+					new AskGridnodeDetailsDecoder(), new PublishAllGridnodesDecoder(),
+					new PublishAllGridnodesEncoder(),
 					new PingChannelHandler(), new PublishSporkChannelHandler(),
 					new HelloChannelHandler(), new PublishPeersChannelHandler(),
-					new PublishGridnodeChannelHandler()
+					new PublishGridnodeChannelHandler(), new PublishAllGridnodesHandler(),
+					new AskGridnodeDetailsChannelHandler()
 				);
 			}, () -> {
-				return Arrays.asList(
-					new PingSchedule(),
+				return Arrays.asList(new PingSchedule(),
 					new PublishPeersSchedule(),
 					new PublishAndSaveSporkSchedule(),
-					new PublishGridnodeSchedule()
+					new PublishAllGridnodesSchedule()
 				);
 			}, RegisterQuicChannelInitializer.Type.SERVER)).build();
 

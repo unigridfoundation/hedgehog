@@ -21,16 +21,21 @@ package org.unigrid.hedgehog.model.network.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import jakarta.inject.Inject;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.unigrid.hedgehog.model.crypto.NetworkIdentifier;
+import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.Topology;
-import org.unigrid.hedgehog.model.network.packet.AskGridnodeDetails;
 import org.unigrid.hedgehog.model.network.codec.api.PacketDecoder;
 import org.unigrid.hedgehog.model.network.packet.Packet;
+import org.unigrid.hedgehog.model.network.packet.PublishAllGridnodes;
 import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
+import org.unigrid.hedgehog.model.network.util.ByteBufUtils;
 
-public class AskGridnodeDetailsDecoder extends AbstractReplayingDecoder<AskGridnodeDetails>
-	implements PacketDecoder<AskGridnodeDetails> {
+@Slf4j
+public class PublishAllGridnodesDecoder extends AbstractReplayingDecoder<PublishAllGridnodes>
+	implements PacketDecoder<PublishAllGridnodes> {
 
 	@Inject
 	private Topology topology;
@@ -39,15 +44,31 @@ public class AskGridnodeDetailsDecoder extends AbstractReplayingDecoder<AskGridn
 	private NetworkIdentifier id;
 
 	@Override
-	public Optional<AskGridnodeDetails> typedDecode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-		AskGridnodeDetails gridnodeDetails = AskGridnodeDetails.builder().message(in.readShort()).build();
-		System.out.println("decoding gridnode-get");
-		return Optional.of(gridnodeDetails);
+	public Optional<PublishAllGridnodes> typedDecode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+
+		final PublishAllGridnodes gridnodePacket = PublishAllGridnodes.builder().build();
+		
+		final int numGridnodes = in.readShort();
+		in.skipBytes(6 /* 48 bytes */);
+
+		for (int i = 0; i < numGridnodes; i++) {
+			final byte gridnodeStatus = in.readByte();
+			in.skipBytes(5);
+			final short length = in.readShort();
+			final ByteBuf data = in.readBytes(length);
+			final String gridnodeId = data.toString(StandardCharsets.UTF_8);
+			final String hostName = ByteBufUtils.readNullTerminatedString(in);
+			gridnodePacket.getGridnodes().add(Gridnode.builder().hostName(hostName).id(gridnodeId)
+				.status(Gridnode.Status.get(gridnodeStatus)).build());
+		}
+
+		log.atDebug().log("decode gridnode");
+
+		return Optional.of(gridnodePacket);
 	}
 
 	@Override
 	public Packet.Type getCodecType() {
-		return Packet.Type.ASK_GRIDNODE_DETAILS;
+		return Packet.Type.GRIDNODE_ALL;
 	}
-	
 }

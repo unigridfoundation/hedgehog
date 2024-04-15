@@ -16,72 +16,40 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
-
 package org.unigrid.hedgehog.model.network.handler;
 
 import jakarta.inject.Inject;
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collector;
-import lombok.SneakyThrows;
-import mockit.Mocked;
-import mockit.Mock;
-import mockit.MockUp;
-import mockit.Tested;
-import net.jqwik.api.Example;
 import net.jqwik.api.ForAll;
-import net.jqwik.api.constraints.ByteRange;
 import net.jqwik.api.Property;
 import net.jqwik.api.ShrinkingMode;
+import org.unigrid.hedgehog.model.network.Topology;
+import org.unigrid.hedgehog.model.network.packet.AskGridnodeDetails;
+import org.unigrid.hedgehog.server.TestServer;
+import static org.hamcrest.Matchers.*;
 import static org.awaitility.Awaitility.await;
 import org.bitcoinj.core.ECKey;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import org.unigrid.hedgehog.client.P2PClient;
-import org.unigrid.hedgehog.command.option.GridnodeOptions;
-import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.Connection;
-import org.unigrid.hedgehog.model.network.Node;
-import org.unigrid.hedgehog.model.network.Topology;
-import org.unigrid.hedgehog.model.network.packet.Ping;
 import org.unigrid.hedgehog.model.network.initializer.RegisterQuicChannelInitializer;
-import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
-import org.unigrid.hedgehog.model.network.packet.PublishPeers;
-import org.unigrid.hedgehog.model.network.schedule.PingSchedule;
-import org.unigrid.hedgehog.model.network.schedule.PublishAllGridnodesSchedule;
-import org.unigrid.hedgehog.server.TestServer;
 
-public class PublishGridnodeTest extends BaseHandlerTest<PublishGridnode, PublishGridnodeChannelHandler> {
+public class AskGridnodeDetailsChanelHandlerTest extends BaseHandlerTest<AskGridnodeDetails, AskGridnodeDetailsChannelHandler>{
 
-	/*public final class FakeGridnodeOptions extends MockUp<GridnodeOptions> {
-
-		private String gridnodeKey;
-
-		@Mock
-		public String getGridnodeKey() {
-			System.out.println("Getting gridnode key");
-			ECKey key = new ECKey();
-			return key.getPublicKeyAsHex();
-		}
-	}*/
-	
 	@Inject
 	private Topology topology;
 
-	public PublishGridnodeTest() {
-		super(PublishGridnodeChannelHandler.class);
+	public AskGridnodeDetailsChanelHandlerTest() {
+		super(AskGridnodeDetailsChannelHandler.class);
 	}
 
 	@Property(tries = 30, shrinking = ShrinkingMode.OFF)
-	public void shoulPropagateGridnodeToNetwork(@ForAll("provideTestServers") List<TestServer> servers,
-		@Mocked PublishAllGridnodesSchedule schedule) throws Exception {
+	public void shouldAskForGridnodes(@ForAll("provideTestServers") List<TestServer> servers) throws Exception{
 		final AtomicInteger invocations = new AtomicInteger();
 		int expectedInvocations = 0;
 
-		setChannelCallback(Optional.of((ctx, publishGridnode) -> {
+		setChannelCallback(Optional.of((ctx, publishAllGridnodes) -> {
 			/* Only count triggers on the server-side  */
 			System.out.println("callback");
 			if (RegisterQuicChannelInitializer.Type.SERVER.is(ctx.channel())) {
@@ -89,18 +57,13 @@ public class PublishGridnodeTest extends BaseHandlerTest<PublishGridnode, Publis
 			}
 		}));
 		
-
-		for (TestServer server : servers) {
+		for (TestServer server: servers) {
 			final String host = server.getP2p().getHostName();
 			final int port = server.getP2p().getPort();
 			final Connection connection = new P2PClient(host, port);
 			final ECKey key = new ECKey();
-			Gridnode gridnode = Gridnode.builder().hostName(host + ":" + port).id(key.getPublicKeyAsHex())
-				.build();
-			topology.addNode(Node.builder().address(new InetSocketAddress(host, port))
-				.build());
-			topology.addGridnode(gridnode);
-			connection.send(PublishGridnode.builder().gridnode(gridnode).build());
+
+			connection.send(AskGridnodeDetails.builder().message((short)1).build());
 			expectedInvocations++;
 
 			await().untilAtomic(invocations, is(greaterThanOrEqualTo(expectedInvocations)));

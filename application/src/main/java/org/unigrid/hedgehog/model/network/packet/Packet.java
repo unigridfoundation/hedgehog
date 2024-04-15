@@ -44,7 +44,7 @@ public class Packet {
 		ASK_PEERS((short) 1000), PUBLISH_PEERS((short) 1010),
 		ASK_NODE_DETAILS((short) 1100), PUBLISH_NODE_DETAILS((short) 1110),
 		ASK_SPORKS((short) 2000), GROW_SPORK((short) 2010), PUBLISH_SPORK((short) 2020),
-		GRIDNODE((short) 2030), ASK_GRIDNODE_DETAILS((short) 2040);
+		GRIDNODE((short) 2030), ASK_GRIDNODE_DETAILS((short) 2040), GRIDNODE_ALL((short) 2050);
 
 		@Getter private final short value;
 
@@ -61,6 +61,7 @@ public class Packet {
 				case 2020: return PUBLISH_SPORK;
 				case 2030: return GRIDNODE;
 				case 2040: return ASK_GRIDNODE_DETAILS;
+				case 2050: return GRIDNODE_ALL;
 				default: return UNDEFINED;
 			}
 		}

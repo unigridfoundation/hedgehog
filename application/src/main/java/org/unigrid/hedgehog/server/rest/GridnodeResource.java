@@ -20,6 +20,7 @@
 package org.unigrid.hedgehog.server.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -212,7 +213,8 @@ public class GridnodeResource extends CDIBridgeResource {
 	public Response repopulate() {
 		Topology.sendAll(AskGridnodeDetails.builder().message((short) 1).build(),
 							topology, Optional.empty());
-		return Response.ok().build();
+		System.out.println("gridnode repopulate");
+		return Response.status(Response.Status.OK).build();
 	}
 
 	/*@Path("heartbeat/hash")

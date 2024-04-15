@@ -16,79 +16,61 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
-
 package org.unigrid.hedgehog.model.network.handler;
 
 import jakarta.inject.Inject;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collector;
 import lombok.SneakyThrows;
 import mockit.Mocked;
-import mockit.Mock;
-import mockit.MockUp;
-import mockit.Tested;
-import net.jqwik.api.Example;
+import net.jqwik.api.Arbitraries;
+import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
-import net.jqwik.api.constraints.ByteRange;
 import net.jqwik.api.Property;
+import net.jqwik.api.Provide;
 import net.jqwik.api.ShrinkingMode;
+import net.jqwik.api.constraints.IntRange;
 import static org.awaitility.Awaitility.await;
 import org.bitcoinj.core.ECKey;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.is;
 import org.unigrid.hedgehog.client.P2PClient;
-import org.unigrid.hedgehog.command.option.GridnodeOptions;
+import org.unigrid.hedgehog.jqwik.ArbitraryGenerator;
 import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.Connection;
 import org.unigrid.hedgehog.model.network.Node;
 import org.unigrid.hedgehog.model.network.Topology;
-import org.unigrid.hedgehog.model.network.packet.Ping;
 import org.unigrid.hedgehog.model.network.initializer.RegisterQuicChannelInitializer;
+import org.unigrid.hedgehog.model.network.packet.PublishAllGridnodes;
 import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
-import org.unigrid.hedgehog.model.network.packet.PublishPeers;
-import org.unigrid.hedgehog.model.network.schedule.PingSchedule;
 import org.unigrid.hedgehog.model.network.schedule.PublishAllGridnodesSchedule;
 import org.unigrid.hedgehog.server.TestServer;
+import org.unigrid.hedgehog.server.rest.GridnodeResourceTest;
 
-public class PublishGridnodeTest extends BaseHandlerTest<PublishGridnode, PublishGridnodeChannelHandler> {
+public class PublishAllGridnodesTest extends BaseHandlerTest<PublishAllGridnodes, PublishAllGridnodesHandler>{
 
-	/*public final class FakeGridnodeOptions extends MockUp<GridnodeOptions> {
-
-		private String gridnodeKey;
-
-		@Mock
-		public String getGridnodeKey() {
-			System.out.println("Getting gridnode key");
-			ECKey key = new ECKey();
-			return key.getPublicKeyAsHex();
-		}
-	}*/
-	
 	@Inject
-	private Topology topology;
-
-	public PublishGridnodeTest() {
-		super(PublishGridnodeChannelHandler.class);
+	private Topology topology;	
+	
+	public PublishAllGridnodesTest() {
+		super(PublishAllGridnodesHandler.class);
 	}
-
+	
 	@Property(tries = 30, shrinking = ShrinkingMode.OFF)
 	public void shoulPropagateGridnodeToNetwork(@ForAll("provideTestServers") List<TestServer> servers,
 		@Mocked PublishAllGridnodesSchedule schedule) throws Exception {
 		final AtomicInteger invocations = new AtomicInteger();
 		int expectedInvocations = 0;
 
-		setChannelCallback(Optional.of((ctx, publishGridnode) -> {
+		setChannelCallback(Optional.of((ctx, publishAllGridnodes) -> {
 			/* Only count triggers on the server-side  */
 			System.out.println("callback");
 			if (RegisterQuicChannelInitializer.Type.SERVER.is(ctx.channel())) {
 				invocations.incrementAndGet();
 			}
 		}));
-		
 
 		for (TestServer server : servers) {
 			final String host = server.getP2p().getHostName();
@@ -100,7 +82,7 @@ public class PublishGridnodeTest extends BaseHandlerTest<PublishGridnode, Publis
 			topology.addNode(Node.builder().address(new InetSocketAddress(host, port))
 				.build());
 			topology.addGridnode(gridnode);
-			connection.send(PublishGridnode.builder().gridnode(gridnode).build());
+			connection.send(PublishAllGridnodes.builder().gridnodes(topology.cloneGridnode()).build());
 			expectedInvocations++;
 
 			await().untilAtomic(invocations, is(greaterThanOrEqualTo(expectedInvocations)));

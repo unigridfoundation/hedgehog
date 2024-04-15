@@ -16,41 +16,27 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+package org.unigrid.hedgehog.model.network.packet;
 
-package org.unigrid.hedgehog.model.network.schedule;
-
-import io.netty.channel.Channel;
+import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
-import org.unigrid.hedgehog.model.cdi.CDIUtil;
 import org.unigrid.hedgehog.model.gridnode.Gridnode;
-import org.unigrid.hedgehog.model.network.Topology;
-import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 
 @Data
-@Slf4j
+@Builder
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class PublishGridnodeSchedule extends AbstractSchedule implements Schedulable {
-	public PublishGridnodeSchedule() {
-		super(PublishGridnode.DISTRIBUTION_FREQUENCY_MINUTES, TimeUnit.MINUTES, false);
-		log.atDebug().log("Init");
-	}
+public class PublishAllGridnodes extends Packet implements Serializable{
+	public static final int DISTRIBUTION_FREQUENCY_MINUTES = 2;
 
-	@Override
-	public Consumer<Channel> getConsumer() {
-		return channel -> {
-			CDIUtil.resolveAndRun(Topology.class, topology -> {
-				final Set<Gridnode> gridnodesToSend = topology.cloneGridnode();
+	@Builder.Default private Set<Gridnode> gridnodes = new HashSet<>();
 
-				gridnodesToSend.forEach((g) -> {
-					log.atTrace().log("Sending gridnode");
-					channel.writeAndFlush(PublishGridnode.builder().gridnode(g).build());
-				});
-			});
-		};
+	public PublishAllGridnodes() {
+		setType(Packet.Type.GRIDNODE_ALL);
 	}
 }

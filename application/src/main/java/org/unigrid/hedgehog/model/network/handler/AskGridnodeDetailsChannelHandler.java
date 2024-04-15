@@ -25,6 +25,7 @@ import org.unigrid.hedgehog.model.cdi.CDIUtil;
 import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.Topology;
 import org.unigrid.hedgehog.model.network.packet.AskGridnodeDetails;
+import org.unigrid.hedgehog.model.network.packet.PublishAllGridnodes;
 import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 
 public class AskGridnodeDetailsChannelHandler extends AbstractInboundHandler<AskGridnodeDetails> {
@@ -37,11 +38,10 @@ public class AskGridnodeDetailsChannelHandler extends AbstractInboundHandler<Ask
 	public void typedChannelRead(ChannelHandlerContext context, AskGridnodeDetails askGridnodeDetails) throws Exception {
 		CDIUtil.resolveAndRun(Topology.class, topology -> {
 			final Set<Gridnode> gridnodes = topology.cloneGridnode();
-			
-			gridnodes.forEach((g) -> {
-				Topology.sendAll(PublishGridnode.builder().gridnode(g).build(),
-							topology, Optional.empty());
-			});
+
+			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			Topology.sendAll(PublishAllGridnodes.builder().gridnodes(gridnodes).build(),
+						topology, Optional.empty());
 		});
 	}
 }

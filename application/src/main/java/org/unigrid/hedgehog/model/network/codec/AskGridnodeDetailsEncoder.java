@@ -46,7 +46,7 @@ public class AskGridnodeDetailsEncoder extends AbstractMessageToByteEncoder<AskG
 		final ByteBuf out = Unpooled.buffer();
 	
 		out.writeShort(in.getMessage());
-
+		System.out.println("encoding gridnode-get");
 		return Optional.of(out);
 	}
 
