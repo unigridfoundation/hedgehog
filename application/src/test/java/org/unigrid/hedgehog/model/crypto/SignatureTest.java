@@ -22,23 +22,72 @@ package org.unigrid.hedgehog.model.crypto;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import lombok.SneakyThrows;
+import mockit.Mock;
+import mockit.MockUp;
 import org.unigrid.hedgehog.jqwik.BaseMockedWeldTest;
 import net.jqwik.api.constraints.NotEmpty;
 import net.jqwik.api.constraints.Size;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import org.apache.commons.codec.binary.Hex;
+import net.jqwik.api.lifecycle.BeforeProperty;
+import org.unigrid.hedgehog.command.option.NetOptions;
+import org.unigrid.hedgehog.model.HedgehogConfig;
 
 public class SignatureTest extends BaseMockedWeldTest {
+	private static final int NUM_SIGNATURES = 3;
+	private static final List<Signature> SIGNATURES = new ArrayList<>(NUM_SIGNATURES);
+
+	@SneakyThrows
+	@BeforeProperty
+	private void mockBefore() {
+		for (int i = 0; i < NUM_SIGNATURES; i++) {
+			SIGNATURES.add(new Signature());
+		}
+
+		new MockUp<NetOptions>() {
+			@Mock public static String[] getNetworkKeys() {
+				return SIGNATURES.stream().map(signature -> signature.getPublicKey()).toArray(String[]::new);
+			}
+		};
+	}
+
+	
 	@SneakyThrows
 	@Property(tries = 100)
 	public boolean shouldSignAndVerify(@ForAll byte[] data) {
+		new MockUp<HedgehogConfig>() {
+			@Mock public long getVerifyChangeDate() {
+				return 1716707716;
+			}
+		};
+
 		final Signature signature = new Signature();
 		final byte[] signatureData = signature.sign(data);
 
 		return signature.verify(data, signatureData);
+	}
+	
+	@SneakyThrows
+	@Property(tries = 100)
+	public boolean shouldSignAndVerifyNewWay(@ForAll byte[] data) {
+		new MockUp<HedgehogConfig>() {
+			@Mock public long getVerifyChangeDate() {
+				return 0;
+			}
+		};
+
+		final Signature signature = new Signature();
+		final byte[] signatureData = signature.sign(data);
+		
+		final Signature signature2 = SIGNATURES.get(0);
+		final byte[] signatureData2 = signature2.sign(signatureData);
+		return signature.verify(data, signatureData2);
 	}
 
 	@SneakyThrows

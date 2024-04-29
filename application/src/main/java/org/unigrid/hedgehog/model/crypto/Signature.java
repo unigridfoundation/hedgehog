@@ -16,16 +16,19 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
-
 package org.unigrid.hedgehog.model.crypto;
 
+import jakarta.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.interfaces.ECPrivateKey;
@@ -37,12 +40,19 @@ import java.security.spec.ECPrivateKeySpec;
 import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Date;
 import java.util.Optional;
+import org.bitcoinj.core.ECKey;
+import org.unigrid.hedgehog.command.option.NetOptions;
+import org.unigrid.hedgehog.model.HedgehogConfig;
 
 public class Signature {
+
 	private static final String KEYPAIR_NAME = "EC";
 	private static final String SIGNATURE_NAME = "SHA512WithECDSA";
-	private static final String EC_SEC_NAME = "secp521r1"; /* P‐521 */
+	private static final String EC_SEC_NAME = "secp521r1";
+	/* P‐521 */
 
 	public static final int PRIVATE_KEY_SIZE = 520;
 	public static final int PRIVATE_KEY_HEX_SIZE = 65;
@@ -51,6 +61,7 @@ public class Signature {
 
 	private ECPrivateKey privateKey;
 	private ECPublicKey publicKey;
+	private ECPublicKey pubKey;
 
 	public Signature() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
 		final ECGenParameterSpec ec = new ECGenParameterSpec(EC_SEC_NAME);
@@ -86,7 +97,7 @@ public class Signature {
 			if (privateKeyHex.get().length() / 2 != PRIVATE_KEY_HEX_SIZE) {
 				throw new IllegalArgumentException(
 					String.format("Private key is required to be %d bytes, but was %d bytes",
-					PRIVATE_KEY_HEX_SIZE, privateKeyHex.get().length() / 2)
+						PRIVATE_KEY_HEX_SIZE, privateKeyHex.get().length() / 2)
 				);
 			}
 
@@ -108,7 +119,7 @@ public class Signature {
 			if (publicKeyHex.get().length() / 2 != PUBLIC_KEY_HEX_SIZE) {
 				throw new IllegalArgumentException(
 					String.format("Public key is required to be %d bytes, but was %d bytes",
-					PUBLIC_KEY_HEX_SIZE, publicKeyHex.get().length() / 2)
+						PUBLIC_KEY_HEX_SIZE, publicKeyHex.get().length() / 2)
 				);
 			}
 		}
@@ -138,15 +149,43 @@ public class Signature {
 	public boolean verify(byte[] data, byte[] signatureData) throws VerifySignatureException {
 		try {
 			final java.security.Signature signature = java.security.Signature.getInstance(SIGNATURE_NAME);
+			Date now = new Date();
+			Date changeDate = new Date();
 
+			/*changeDate.setTime(new HedgehogConfig().getVerifyChangeDate() * 1000);
+			if (now.getTime() > changeDate.getTime()) {
+				signature.initVerify(publicKey);
+				signature.update(data);
+				for (String s : NetOptions.getNetworkKeys()) {
+
+					byte[] byteKey = DatatypeConverter.parseHexBinary(s);
+
+					X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
+
+					KeyFactory kf = KeyFactory.getInstance(KEYPAIR_NAME);
+
+					pubKey = (ECPublicKey) kf.generatePublic(X509publicKey);
+
+					signature.initVerify(pubKey);
+					signature.update(data);
+				}
+			} else {
+				signature.initVerify(publicKey);
+				signature.update(data);
+			}*/
 			signature.initVerify(publicKey);
 			signature.update(data);
+
 			return signature.verify(signatureData);
 
 		} catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException ex) {
-			throw new VerifySignatureException(String.format("Failed to verify siugnature data "
+			throw new VerifySignatureException(String.format("Failed to verify signature data "
 				+ "with public key '%s'", publicKey), ex);
 		}
+		/*catch (InvalidKeySpecException e) {
+			throw new VerifySignatureException(String.format("Failed to verify signature data "
+				+ "with public key '%s'", pubKey), e);
+		}*/
 	}
 
 	public static boolean verify(Signable signable, String key) throws VerifySignatureException {
