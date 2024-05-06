@@ -58,6 +58,13 @@ public class GridSporkProvider {
 				data.setMints(mints);
 				return data;
 
+			} case MINIMUM_VERSION: {
+				final MinimumVersionSpork.SporkData data = new MinimumVersionSpork.SporkData();
+				data.setMinimumVersion("0.0.1");
+				data.setMinimumHedgehogProtocoll("0.0.1");
+				data.setMinimumGridsporkProtocoll("0.0.1");
+				return data;
+
 			} case MINT_SUPPLY: {
 				final MintSupply.SporkData data = new MintSupply.SporkData();
 				data.setMaxSupply(BigDecimal.valueOf(RandomUtils.nextInt()));

@@ -70,6 +70,9 @@ public class BaseSporkDatabaseTest extends BaseMockedWeldTest {
 			case MINT_SUPPLY:
 				sporkDatabase.setMintSupply((MintSupply) gridSpork);
 				break;
+			
+			case MINIMUM_VERSION:
+				sporkDatabase.setMinimumVersionSpork((MinimumVersionSpork) gridSpork);
 
 			case VESTING_STORAGE:
 				sporkDatabase.setVestingStorage((VestingStorage) gridSpork);

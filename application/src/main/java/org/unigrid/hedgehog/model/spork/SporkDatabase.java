@@ -46,6 +46,7 @@ public class SporkDatabase implements Serializable {
 	private MintSupply mintSupply;
 	private VestingStorage vestingStorage;
 	private ValidatorSpork validatorSpork;
+	private MinimumVersionSpork minimumVersionSpork;
 
 	private StatisticsPubKey statisticsPubKey;
 
@@ -66,6 +67,7 @@ public class SporkDatabase implements Serializable {
 		switch (gridSporkType) {
 			case MINT_STORAGE: return mintStorage;
 			case MINT_SUPPLY: return mintSupply;
+			case MINIMUM_VERSION: return minimumVersionSpork;
 			case VESTING_STORAGE: return vestingStorage;
 			case VALIDATOR_SPORK: return validatorSpork;
 			case STATISTICS_PUBKEY: return statisticsPubKey;
@@ -81,6 +83,10 @@ public class SporkDatabase implements Serializable {
 
 			case MINT_SUPPLY:
 				mintSupply = (MintSupply) gridSpork;
+				break;
+
+			case MINIMUM_VERSION:
+				minimumVersionSpork = (MinimumVersionSpork) gridSpork;
 				break;
 
 			case VESTING_STORAGE:
