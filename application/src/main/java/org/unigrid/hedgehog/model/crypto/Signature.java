@@ -42,11 +42,18 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.core.ECKey;
 import org.unigrid.hedgehog.command.option.NetOptions;
 import org.unigrid.hedgehog.model.HedgehogConfig;
 
+@Slf4j
 public class Signature {
 
 	private static final String KEYPAIR_NAME = "EC";
@@ -61,7 +68,6 @@ public class Signature {
 
 	private ECPrivateKey privateKey;
 	private ECPublicKey publicKey;
-	private ECPublicKey pubKey;
 
 	public Signature() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
 		final ECGenParameterSpec ec = new ECGenParameterSpec(EC_SEC_NAME);
@@ -146,46 +152,44 @@ public class Signature {
 		}
 	}
 
-	public boolean verify(byte[] data, byte[] signatureData) throws VerifySignatureException {
+	public boolean verify(byte[] data, byte[] signedSignatureData, byte[] signedData) {
 		try {
 			final java.security.Signature signature = java.security.Signature.getInstance(SIGNATURE_NAME);
-			Date now = new Date();
-			Date changeDate = new Date();
 
-			/*changeDate.setTime(new HedgehogConfig().getVerifyChangeDate() * 1000);
-			if (now.getTime() > changeDate.getTime()) {
-				signature.initVerify(publicKey);
-				signature.update(data);
-				for (String s : NetOptions.getNetworkKeys()) {
-
-					byte[] byteKey = DatatypeConverter.parseHexBinary(s);
-
-					X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
-
-					KeyFactory kf = KeyFactory.getInstance(KEYPAIR_NAME);
-
-					pubKey = (ECPublicKey) kf.generatePublic(X509publicKey);
-
-					signature.initVerify(pubKey);
-					signature.update(data);
+			signature.initVerify(publicKey);
+			signature.update(data);
+			if (signature.verify(signedSignatureData)) {
+				for (String key : NetOptions.getNetworkKeys()) {
+					if (!key.equals(getPublicKey())) {
+						Signature sign = new Signature(Optional.empty(), Optional.of(key));
+						if (sign.verify(data, signedData)) {
+							return true;
+						}
+					}
 				}
-			} else {
-				signature.initVerify(publicKey);
-				signature.update(data);
-			}*/
+			}
+
+			return false;
+		} catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException
+			| InvalidKeySpecException | VerifySignatureException | InvalidAlgorithmParameterException ex) {
+			log.atTrace().log("{}:{}", ex.getMessage(), ExceptionUtils.getStackTrace(ex));
+			return false;
+		}
+	}
+
+	public boolean verify(byte[] data, byte[] signedData) throws VerifySignatureException {
+		try {
+			final java.security.Signature signature = java.security.Signature.getInstance(SIGNATURE_NAME);
+
 			signature.initVerify(publicKey);
 			signature.update(data);
 
-			return signature.verify(signatureData);
+			return signature.verify(signedData);
 
 		} catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException ex) {
 			throw new VerifySignatureException(String.format("Failed to verify signature data "
 				+ "with public key '%s'", publicKey), ex);
 		}
-		/*catch (InvalidKeySpecException e) {
-			throw new VerifySignatureException(String.format("Failed to verify signature data "
-				+ "with public key '%s'", pubKey), e);
-		}*/
 	}
 
 	public static boolean verify(Signable signable, String key) throws VerifySignatureException {

@@ -60,7 +60,7 @@ public class SignatureTest extends BaseMockedWeldTest {
 	
 	@SneakyThrows
 	@Property(tries = 100)
-	public boolean shouldSignAndVerify(@ForAll byte[] data) {
+	public boolean shouldSignAndVerify(@ForAll @NotEmpty byte[] data) {
 		new MockUp<HedgehogConfig>() {
 			@Mock public long getVerifyChangeDate() {
 				return 1716707716;
@@ -75,19 +75,37 @@ public class SignatureTest extends BaseMockedWeldTest {
 	
 	@SneakyThrows
 	@Property(tries = 100)
-	public boolean shouldSignAndVerifyNewWay(@ForAll byte[] data) {
+	public boolean shouldSignAndVerifyNewWay(@ForAll @NotEmpty @Size(min = 50, max = 70) byte[] data) {
+
 		new MockUp<HedgehogConfig>() {
 			@Mock public long getVerifyChangeDate() {
 				return 0;
 			}
 		};
 
-		final Signature signature = new Signature();
+		final Signature signature = SIGNATURES.get(0);
 		final byte[] signatureData = signature.sign(data);
-		
-		final Signature signature2 = SIGNATURES.get(0);
-		final byte[] signatureData2 = signature2.sign(signatureData);
-		return signature.verify(data, signatureData2);
+
+		final Signature signature2 = SIGNATURES.get(1);
+		final byte[] signatureData2 = signature2.sign(data);
+
+		return signature.verify(data, signatureData, signatureData2);
+	}
+	
+		@SneakyThrows
+	@Property(tries = 100)
+	public boolean shouldSignAndVerifyNewWayWithSameKey(@ForAll @NotEmpty @Size(min = 50, max = 70) byte[] data) {
+
+		new MockUp<HedgehogConfig>() {
+			@Mock public long getVerifyChangeDate() {
+				return 0;
+			}
+		};
+
+		final Signature signature = SIGNATURES.get(0);
+		final byte[] signatureData = signature.sign(data);
+
+		return !signature.verify(data, signatureData, signatureData);
 	}
 
 	@SneakyThrows
