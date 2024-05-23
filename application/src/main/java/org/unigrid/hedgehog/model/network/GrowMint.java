@@ -16,16 +16,30 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+package org.unigrid.hedgehog.model.network;
 
-package org.unigrid.hedgehog.model.crypto;
-
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public interface Signable {
-	byte[] getSignable();
-	byte[] getSignature();
-	List<byte[]> getSignatures();
-	void sign(String privateKeyHex) throws SigningException;
-	void signMultiple(List<byte[]> signatures) throws SigningException;
-	boolean isValidSignature();
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class GrowMint {
+	private BigDecimal amount;
+	private List<String> signatures;
+	private String data;
+
+	public List<byte[]> getSignatures() {
+		List<byte[]> signs = new ArrayList<>();
+		for (String s : signatures) {
+			signs.add(s.getBytes());
+		}
+		return signs;
+	}
 }

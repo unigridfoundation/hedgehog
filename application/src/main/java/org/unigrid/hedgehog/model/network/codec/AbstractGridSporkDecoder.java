@@ -22,9 +22,13 @@ package org.unigrid.hedgehog.model.network.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.unigrid.hedgehog.model.HedgehogConfig;
 import org.unigrid.hedgehog.model.collection.OptionalMap;
+import org.unigrid.hedgehog.model.crypto.Signature;
 import org.unigrid.hedgehog.model.network.chunk.ChunkData;
 import org.unigrid.hedgehog.model.network.chunk.ChunkGroup;
 import org.unigrid.hedgehog.model.network.chunk.ChunkScanner;
@@ -53,7 +57,7 @@ public abstract class AbstractGridSporkDecoder<T extends Packet> extends Abstrac
 	    [                       << spork data >>                       ]
 	    [                    << spork delta data >>                    ]
 	    [     size     ][             signature (size long)          >>]
-	*/
+	 */
 	public Optional<GridSpork> decodeGridSpork(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
 		final GridSpork.Type type = GridSpork.Type.get(in.readShort());
 		final Optional<ChunkDecoder> cd = decoders.getOptional(type);
@@ -70,12 +74,23 @@ public abstract class AbstractGridSporkDecoder<T extends Packet> extends Abstrac
 
 			gridSpork.setData((ChunkData) cd.get().decodeChunk(ctx, in).get());
 			gridSpork.setPreviousData((ChunkData) cd.get().decodeChunk(ctx, in).get());
+			if (Signature.isNewSignatureScheme()) {
+				final byte numSignatures = in.readByte();
+				List<byte[]> signatures = new ArrayList<>();
+				for (int i = 0; i < numSignatures; i++) {
+					final int signatureLength = in.readUnsignedShort();
+					final byte[] signature = new byte[signatureLength];
+					in.readBytes(signature);
+					signatures.add(signature);
+				}
+				gridSpork.setSignatures(signatures);
+			} else {
+				final int signatureLength = in.readUnsignedShort();
+				final byte[] signature = new byte[signatureLength];
 
-			final int signatureLength = in.readUnsignedShort();
-			final byte[] signature = new byte[signatureLength];
-
-			in.readBytes(signature);
-			gridSpork.setSignature(signature);
+				in.readBytes(signature);
+				gridSpork.setSignature(signature);
+			}
 
 			return Optional.of(gridSpork);
 		}

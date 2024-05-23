@@ -22,6 +22,7 @@ package org.unigrid.hedgehog.model.crypto;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.List;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -54,6 +55,7 @@ public class NetworkKey {
 		private static final int SIZE = 32;
 		@Getter private byte[] signable;
 		@Getter private byte[] signature;
+		@Getter private List<byte[]> signatures;
 
 		public static RandomSignableData create(String privateKeyHex) throws SigningException {
 			final RandomSignableData randomSignableData = new RandomSignableData();
@@ -92,6 +94,13 @@ public class NetworkKey {
 				| NoSuchAlgorithmException  ex) {
 
 				throw new SigningException("Failed to prepare random signable data", ex);
+			}
+		}
+
+		@Override
+		public void signMultiple(List<byte[]> signatures) throws SigningException {
+			for (byte[] sign : signatures) {
+				this.signatures.add(sign);
 			}
 		}
 	}

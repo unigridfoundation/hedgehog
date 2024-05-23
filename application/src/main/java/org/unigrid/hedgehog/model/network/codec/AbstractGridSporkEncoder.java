@@ -26,6 +26,7 @@ import java.util.Optional;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.unigrid.hedgehog.model.collection.OptionalMap;
+import org.unigrid.hedgehog.model.crypto.Signature;
 import org.unigrid.hedgehog.model.network.chunk.ChunkGroup;
 import org.unigrid.hedgehog.model.network.chunk.ChunkScanner;
 import org.unigrid.hedgehog.model.network.chunk.ChunkType;
@@ -73,8 +74,16 @@ public abstract class AbstractGridSporkEncoder<T extends Packet> extends Abstrac
 			ce.get().encodeChunk(ctx, spork.getData(), data);
 			ce.get().encodeChunk(ctx, spork.getPreviousData(), data);
 
-			data.writeShort(spork.getSignature().length);
-			data.writeBytes(spork.getSignature());
+			if(Signature.isNewSignatureScheme()) {
+				data.writeByte(spork.getSignatures().size());
+				for (byte[] signature : spork.getSignatures()) {
+					data.writeShort(signature.length);
+					data.writeBytes(signature);
+				}
+			} else {
+				data.writeShort(spork.getSignature().length);
+				data.writeBytes(spork.getSignature());
+			}
 			out.writeBytes(data);
 		}
 	}

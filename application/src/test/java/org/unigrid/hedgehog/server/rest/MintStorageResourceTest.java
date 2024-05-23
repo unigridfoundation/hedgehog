@@ -16,7 +16,6 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
-
 package org.unigrid.hedgehog.server.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +24,7 @@ import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
@@ -46,11 +46,13 @@ import static org.hamcrest.Matchers.*;
 import org.unigrid.hedgehog.jqwik.TestFileOutput;
 import org.unigrid.hedgehog.model.Address;
 import org.unigrid.hedgehog.model.crypto.Signature;
+import org.unigrid.hedgehog.model.network.GrowMint;
 import org.unigrid.hedgehog.model.spork.MintStorage;
 import org.unigrid.hedgehog.model.spork.MintStorage.SporkData.Location;
 import org.unigrid.hedgehog.model.spork.ValidatorSpork;
 
 public class MintStorageResourceTest extends BaseRestClientTest {
+
 	@Provide
 	public Arbitrary<Location> provideLocation(@ForAll @AlphaChars @StringLength(36) String address,
 		@ForAll @Positive int height) {
@@ -67,7 +69,7 @@ public class MintStorageResourceTest extends BaseRestClientTest {
 
 	@SneakyThrows
 	@Property(tries = 30, shrinking = ShrinkingMode.OFF)
-	public void shoulBeVerifiableInList(@ForAll("provideSignature") Signature signature,
+	public void shoulBeVerifiableInList(@ForAll("provideSignatures") List<Signature> signatures,
 		@ForAll @UniqueElements @Size(5) List<@From("provideLocation") Location> locations,
 		@ForAll @BigRange(min = "0", max = "1000000") BigDecimal amount) {
 
@@ -82,9 +84,19 @@ public class MintStorageResourceTest extends BaseRestClientTest {
 		}
 
 		for (Location l : locations) {
+			byte[] data = new StringBuilder().append(amount).append(",")
+				.append(l.getAddress().getWif()).append(",").append(l.getHeight())
+				.toString().getBytes();
+			List<String> signs = new ArrayList<>();
+			byte[] signatureOne = signatures.get(0).sign(data);
+			signs.add(signatureOne.toString());
+			byte[] signatureTwo = signatures.get(0).sign(data);
+			signs.add(signatureTwo.toString());
+			GrowMint growMint = GrowMint.builder().amount(amount).signatures(signs)
+				.data(data.toString()).build();
 			final Response putResponse = client.putWithHeaders(url + l.getAddress().getWif() + "/" + l.getHeight(),
-				Entity.text(amount), new MultivaluedHashMap(Map.of("privateKey",
-				signature.getPrivateKey()))
+				Entity.json(growMint), new MultivaluedHashMap(Map.of("privateKey",
+				signatures.get(0).getPrivateKey()))
 			);
 
 			if (Status.fromStatusCode(putResponse.getStatus()) == Status.OK) {
@@ -129,7 +141,7 @@ public class MintStorageResourceTest extends BaseRestClientTest {
 	@SneakyThrows
 	@Property(tries = 50)
 	public void shouldVerifyAddedKeyInList(@ForAll("provideSignature") Signature signature,
-		@ForAll ("providePubKey") String pubKey) {
+		@ForAll("providePubKey") String pubKey) {
 
 		final String url = "/gridspork/validator/";
 		final Response response = client.get(url + "/list");

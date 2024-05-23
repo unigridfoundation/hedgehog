@@ -37,7 +37,6 @@ import org.apache.commons.lang3.SystemUtils;
 @Data
 public class HedgehogConfig {
 
-	private static long verifyChangeDate = 1716707716;
 	private static final String CONFIG_FILE = "hedgehog.conf";
 	private static final String APPLICATION_NAME = "UNIGRID";
 	private static final String OSX_SUPPORT_DIR = "Library/Application Support";
@@ -110,9 +109,5 @@ public class HedgehogConfig {
 			sb.append(ALPHANUMERIC_CHARACTERS.charAt(index));
 		}
 		return sb.toString();
-	}
-
-	public long getVerifyChangeDate() {
-		return verifyChangeDate;
 	}
 }

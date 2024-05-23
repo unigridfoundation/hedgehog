@@ -89,10 +89,10 @@ public class SignatureTest extends BaseMockedWeldTest {
 		final Signature signature2 = SIGNATURES.get(1);
 		final byte[] signatureData2 = signature2.sign(data);
 
-		return signature.verify(data, signatureData, signatureData2);
+		return signature.verifyMultiple(data, signatureData, signatureData2);
 	}
 	
-		@SneakyThrows
+	@SneakyThrows
 	@Property(tries = 100)
 	public boolean shouldSignAndVerifyNewWayWithSameKey(@ForAll @NotEmpty @Size(min = 50, max = 70) byte[] data) {
 
@@ -105,7 +105,25 @@ public class SignatureTest extends BaseMockedWeldTest {
 		final Signature signature = SIGNATURES.get(0);
 		final byte[] signatureData = signature.sign(data);
 
-		return !signature.verify(data, signatureData, signatureData);
+		return !signature.verifyMultiple(data, signatureData, signatureData);
+	}
+
+	@SneakyThrows
+	@Property(tries = 100)
+	public boolean shouldSignAndVerifyNewWayUsingList(@ForAll @NotEmpty @Size(min = 50, max = 70) byte[] data) {
+
+		new MockUp<HedgehogConfig>() {
+			@Mock public long getVerifyChangeDate() {
+				return 0;
+			}
+		};
+		Signature signature = SIGNATURES.get(0);
+		List<byte[]> signs = new ArrayList<>();
+		for (Signature s : SIGNATURES) {
+			signs.add(s.sign(data));
+		}
+
+		return signature.verifyMultiple(data, signs);
 	}
 
 	@SneakyThrows

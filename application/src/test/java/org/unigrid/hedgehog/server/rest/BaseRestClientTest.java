@@ -85,6 +85,31 @@ public class BaseRestClientTest extends BaseMockedWeldTest {
 		});
 	}
 
+	@Provide
+	@SneakyThrows
+	public Arbitrary<List<Signature>> provideSignatures() {
+		return Arbitraries.create(new Supplier<List<Signature>>() {
+			@Override
+			@SneakyThrows
+			public List<Signature> get() {
+				List<Signature> signatures = new ArrayList<>();
+				
+				for (int i = 0; i < 3; i++) {
+					signatures.add(new Signature());
+				}
+
+				new MockUp<NetworkKey>() {
+					@Mock public /* static */ String[] getPublicKeys() {
+						return signatures.stream().map(signature -> 
+							signature.getPublicKey()).toArray(String[]::new);
+					}
+				};
+
+				return signatures;
+			}
+		});
+	}
+
 	@BeforeProperty
 	public void before() {
 		TestServer.mockProperties(server);

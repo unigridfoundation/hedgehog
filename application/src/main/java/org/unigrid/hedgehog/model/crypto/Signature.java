@@ -41,6 +41,7 @@ import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +57,8 @@ import org.unigrid.hedgehog.model.HedgehogConfig;
 @Slf4j
 public class Signature {
 
+	private static final long NEW_SIGNATURE_SCHEME_TIME = Instant.parse("2024-05-17T00:00:00Z").getEpochSecond();
+	private static final int NUM_VERIFYED_CONFIRMS = 2;
 	private static final String KEYPAIR_NAME = "EC";
 	private static final String SIGNATURE_NAME = "SHA512WithECDSA";
 	private static final String EC_SEC_NAME = "secp521r1";
@@ -152,17 +155,17 @@ public class Signature {
 		}
 	}
 
-	public boolean verify(byte[] data, byte[] signedSignatureData, byte[] signedData) {
+	public boolean verifyMultiple(byte[] data, byte[] signedDataFirst, byte[] signedDataSecond) {
 		try {
 			final java.security.Signature signature = java.security.Signature.getInstance(SIGNATURE_NAME);
 
 			signature.initVerify(publicKey);
 			signature.update(data);
-			if (signature.verify(signedSignatureData)) {
+			if (signature.verify(signedDataFirst)) {
 				for (String key : NetOptions.getNetworkKeys()) {
 					if (!key.equals(getPublicKey())) {
 						Signature sign = new Signature(Optional.empty(), Optional.of(key));
-						if (sign.verify(data, signedData)) {
+						if (sign.verify(data, signedDataSecond)) {
 							return true;
 						}
 					}
@@ -170,6 +173,31 @@ public class Signature {
 			}
 
 			return false;
+		} catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException
+			| InvalidKeySpecException | VerifySignatureException | InvalidAlgorithmParameterException ex) {
+			log.atTrace().log("{}:{}", ex.getMessage(), ExceptionUtils.getStackTrace(ex));
+			return false;
+		}
+	}
+	
+	public boolean verifyMultiple(byte[] data, List<byte[]> signatures) {
+		try {
+			final java.security.Signature signature = java.security.Signature.getInstance(SIGNATURE_NAME);
+			signature.initVerify(publicKey);
+			signature.update(data);
+			int numConfirms = 0;
+			for (byte[] sign : signatures) {
+				if (verify(data, sign)) {
+					numConfirms++;
+				}
+				for (String s : NetworkKey.getPublicKeys()) {
+					Signature otherSignature = new Signature(Optional.empty(), Optional.of(s));
+					if  (!s.equals(getPublicKey()) && otherSignature.verify(data, sign)) {
+						numConfirms++;
+					}
+				}
+			}
+			return numConfirms >= NUM_VERIFYED_CONFIRMS;
 		} catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException
 			| InvalidKeySpecException | VerifySignatureException | InvalidAlgorithmParameterException ex) {
 			log.atTrace().log("{}:{}", ex.getMessage(), ExceptionUtils.getStackTrace(ex));
@@ -202,5 +230,20 @@ public class Signature {
 				+ "with public key '%s'", key), ex
 			);
 		}
+	}
+	
+	public static boolean verifyMultiple(Signable signable, String key) throws VerifySignatureException {
+		try {
+			final Signature signature = new Signature(Optional.empty(), Optional.of(key));
+			return signature.verifyMultiple(signable.getSignable(), signable.getSignatures());
+		} catch (InvalidAlgorithmParameterException | InvalidKeySpecException | NoSuchAlgorithmException ex) {
+			throw new VerifySignatureException(String.format("Failed to create signature "
+				+ "with public key '%s'", key), ex
+			);
+		}
+	}
+
+	public static boolean isNewSignatureScheme() {
+		return NEW_SIGNATURE_SCHEME_TIME < Instant.now().getEpochSecond();
 	}
 }
