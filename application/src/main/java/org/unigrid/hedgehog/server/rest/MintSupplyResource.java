@@ -29,12 +29,17 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.math.BigDecimal;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.unigrid.hedgehog.model.cdi.CDIBridgeInject;
 import org.unigrid.hedgehog.model.cdi.CDIBridgeResource;
 import org.unigrid.hedgehog.model.crypto.NetworkKey;
+import org.unigrid.hedgehog.model.crypto.Signature;
+import org.unigrid.hedgehog.model.network.MintSupplyGrow;
 import org.unigrid.hedgehog.model.network.Topology;
 import org.unigrid.hedgehog.model.network.packet.PublishSpork;
 import org.unigrid.hedgehog.model.spork.MintSupply;
@@ -44,8 +49,9 @@ import org.unigrid.hedgehog.server.p2p.P2PServer;
 @Slf4j
 @Path("/gridspork")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
+@Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
 public class MintSupplyResource extends CDIBridgeResource {
+
 	@CDIBridgeInject
 	private P2PServer p2pServer;
 
@@ -55,7 +61,8 @@ public class MintSupplyResource extends CDIBridgeResource {
 	@CDIBridgeInject
 	private Topology topology;
 
-	@Path("/mint-supply") @GET
+	@Path("/mint-supply")
+	@GET
 	public Response list() {
 		final MintSupply ms = sporkDatabase.getMintSupply();
 
@@ -66,28 +73,36 @@ public class MintSupplyResource extends CDIBridgeResource {
 		return Response.ok().entity(sporkDatabase.getMintSupply()).build();
 	}
 
-	@Path("/mint-supply") @PUT
-	public Response set(@NotNull BigDecimal maxSupply, @NotNull @HeaderParam("privateKey") String privateKey) {
+	@Path("/mint-supply")
+	@PUT
+	public Response set(@NotNull MintSupplyGrow mintSupplyGrow, @NotNull @HeaderParam("privateKey") String privateKey) {
 
-		if (Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
-			final MintSupply ms = ResourceHelper.getNewOrClonedSporkSection(
-				() -> sporkDatabase.getMintSupply(),
-				() -> new MintSupply()
-			);
-
-			final MintSupply.SporkData data = ms.getData();
-			ms.archive();
-			data.setMaxSupply(maxSupply);
-
-			return ResourceHelper.commitAndSign(ms, privateKey, sporkDatabase, false, signable -> {
-				sporkDatabase.setMintSupply(signable);
-
-				Topology.sendAll(PublishSpork.builder().gridSpork(sporkDatabase.getMintSupply()).build(),
-					topology, Optional.empty()
+		try {
+			Signature signature = new Signature(Optional.of(privateKey), Optional.empty());
+			if (signature.verifyMultiple(mintSupplyGrow.getData().getBytes(), mintSupplyGrow.getSignatures()) &&
+				Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
+				final MintSupply ms = ResourceHelper.getNewOrClonedSporkSection(
+					() -> sporkDatabase.getMintSupply(),
+					() -> new MintSupply()
 				);
-			});
-		}
 
-		return Response.status(Response.Status.UNAUTHORIZED).build();
+				final MintSupply.SporkData data = ms.getData();
+				ms.archive();
+				data.setMaxSupply(mintSupplyGrow.getSupply());
+
+				return ResourceHelper.commitAndSign(ms, privateKey, sporkDatabase, false, signable -> {
+					sporkDatabase.setMintSupply(signable);
+
+					Topology.sendAll(PublishSpork.builder().gridSpork(sporkDatabase.getMintSupply()).build(),
+						topology, Optional.empty()
+					);
+				});
+			}
+
+			return Response.status(Response.Status.UNAUTHORIZED).build();
+		} catch (InvalidAlgorithmParameterException | InvalidKeySpecException | NoSuchAlgorithmException ex) {
+			log.atTrace().log(ex.getMessage());
+			return Response.status(Response.Status.EXPECTATION_FAILED).build();
+		}
 	}
 }

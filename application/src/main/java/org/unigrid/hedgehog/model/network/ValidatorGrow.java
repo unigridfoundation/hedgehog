@@ -19,7 +19,6 @@
 
 package org.unigrid.hedgehog.model.network;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -32,10 +31,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class GrowMint {
-	private BigDecimal amount;
-	private List<String> signatures;
+public class ValidatorGrow {
+	private String pubKey;
 	private String data;
+	private List<String> signatures;
 
 	public List<byte[]> getSignatures() {
 		List<byte[]> signs = new ArrayList<>();

@@ -43,6 +43,7 @@ import org.unigrid.hedgehog.model.crypto.NetworkKey;
 import org.unigrid.hedgehog.model.crypto.Signature;
 import org.unigrid.hedgehog.model.network.GrowMint;
 import org.unigrid.hedgehog.model.network.Topology;
+import org.unigrid.hedgehog.model.network.ValidatorGrow;
 import org.unigrid.hedgehog.model.network.packet.PublishSpork;
 import org.unigrid.hedgehog.model.spork.MintStorage;
 import org.unigrid.hedgehog.model.spork.MintStorage.SporkData.Location;
@@ -140,32 +141,39 @@ public class MintStorageResource extends CDIBridgeResource {
 
 	@Path("/validator")
 	@PUT
-	public Response validatorGrow(@NotNull String pubKey,
+	public Response validatorGrow(@NotNull ValidatorGrow validatorGrow,
 		@NotNull @HeaderParam("privateKey") String privateKey) {
 
-		if (Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
-			final ValidatorSpork vs = ResourceHelper.getNewOrClonedSporkSection(
-				() -> sporkDatabase.getValidatorSpork(),
-				() -> new ValidatorSpork()
-			);
-
-			final ValidatorSpork.SporkData data = vs.getData();
-			final List<String> oldKeys = data.getValidatorKeys();
-			final boolean isUpdate = Objects.nonNull(oldKeys);
-
-			vs.archive();
-			data.getValidatorKeys().add(pubKey);
-
-			return ResourceHelper.commitAndSign(vs, privateKey, sporkDatabase, isUpdate, signable -> {
-				sporkDatabase.setValidatorSpork(signable);
-
-				Topology.sendAll(PublishSpork.builder().gridSpork(sporkDatabase.getValidatorSpork()).build(),
-					topology, Optional.empty()
+		try {
+			Signature signature = new Signature(Optional.of(privateKey), Optional.empty());
+			if (signature.verifyMultiple(validatorGrow.getData().getBytes(), validatorGrow.getSignatures()) &&
+				Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
+				final ValidatorSpork vs = ResourceHelper.getNewOrClonedSporkSection(
+					() -> sporkDatabase.getValidatorSpork(),
+					() -> new ValidatorSpork()
 				);
-			});
-		}
 
-		return Response.status(Response.Status.UNAUTHORIZED).build();
+				final ValidatorSpork.SporkData data = vs.getData();
+				final List<String> oldKeys = data.getValidatorKeys();
+				final boolean isUpdate = Objects.nonNull(oldKeys);
+
+				vs.archive();
+				data.getValidatorKeys().add(validatorGrow.getPubKey());
+
+				return ResourceHelper.commitAndSign(vs, privateKey, sporkDatabase, isUpdate, signable -> {
+					sporkDatabase.setValidatorSpork(signable);
+
+					Topology.sendAll(PublishSpork.builder().gridSpork(sporkDatabase.getValidatorSpork()).build(),
+						topology, Optional.empty()
+					);
+				});
+			}
+
+			return Response.status(Response.Status.UNAUTHORIZED).build();
+		} catch (InvalidAlgorithmParameterException | InvalidKeySpecException | NoSuchAlgorithmException ex) {
+			log.atTrace().log(ex.getMessage());
+			return Response.status(Response.Status.EXPECTATION_FAILED).build();
+		}
 	}
 
 	@Path("/validator/list")
