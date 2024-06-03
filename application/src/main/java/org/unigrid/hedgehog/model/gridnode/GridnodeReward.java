@@ -20,5 +20,5 @@
 package org.unigrid.hedgehog.model.gridnode;
 
 public class GridnodeReward {
-	
+	//TODO: implement gridnode reward
 }

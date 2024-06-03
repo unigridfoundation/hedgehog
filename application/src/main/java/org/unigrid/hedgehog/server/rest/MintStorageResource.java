@@ -16,6 +16,7 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.server.rest;
 
 import jakarta.validation.constraints.NotNull;
@@ -123,13 +124,15 @@ public class MintStorageResource extends CDIBridgeResource {
 				ms.archive();
 				sporkData.getMints().put(location, growMint.getAmount());
 
-				return ResourceHelper.commitAndSign(ms, growMint.getSignatures(), sporkDatabase, isUpdate, signable -> {
-					sporkDatabase.setMintStorage(signable);
+				return ResourceHelper.commitAndSign(ms, growMint.getSignatures(), sporkDatabase,
+					isUpdate, signable -> {
+						sporkDatabase.setMintStorage(signable);
 
-					Topology.sendAll(PublishSpork.builder().gridSpork(sporkDatabase.getMintStorage()).build(),
-						topology, Optional.empty()
-					);
-				});
+						Topology.sendAll(PublishSpork.builder()
+							.gridSpork(sporkDatabase.getMintStorage()).build(), topology,
+								Optional.empty()
+						);
+					});
 			}
 
 			return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -146,8 +149,8 @@ public class MintStorageResource extends CDIBridgeResource {
 
 		try {
 			Signature signature = new Signature(Optional.of(privateKey), Optional.empty());
-			if (signature.verifyMultiple(validatorGrow.getData().getBytes(), validatorGrow.getSignatures()) &&
-				Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
+			if (signature.verifyMultiple(validatorGrow.getData().getBytes(), validatorGrow.getSignatures())
+				&& Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
 				final ValidatorSpork vs = ResourceHelper.getNewOrClonedSporkSection(
 					() -> sporkDatabase.getValidatorSpork(),
 					() -> new ValidatorSpork()
@@ -163,8 +166,9 @@ public class MintStorageResource extends CDIBridgeResource {
 				return ResourceHelper.commitAndSign(vs, privateKey, sporkDatabase, isUpdate, signable -> {
 					sporkDatabase.setValidatorSpork(signable);
 
-					Topology.sendAll(PublishSpork.builder().gridSpork(sporkDatabase.getValidatorSpork()).build(),
-						topology, Optional.empty()
+					Topology.sendAll(PublishSpork.builder()
+						.gridSpork(sporkDatabase.getValidatorSpork()).build(), topology,
+							Optional.empty()
 					);
 				});
 			}

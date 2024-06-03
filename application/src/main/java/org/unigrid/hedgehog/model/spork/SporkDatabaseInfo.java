@@ -78,7 +78,7 @@ public class SporkDatabaseInfo implements Serializable {
 					sporkDatabase.getMinimumVersionSpork().getData();
 				final String amount = data.getMinimumVersion();
 				final Instant lastChanged = sporkDatabase.getMinimumVersionSpork().getTimeStamp();
-				
+
 				minimumVersionEntries.amount = data.getMinimumVersion();
 				minimumVersionEntries.lastChanged = lastChanged.toString();
 			}

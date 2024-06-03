@@ -28,7 +28,7 @@ public class Delegations {
 
 	@JsonProperty(value = "delegated_amount")
 	private String delegatedAmount;
-	
+
 	@JsonProperty(value = "public_key")
 	private String publicKey;
 

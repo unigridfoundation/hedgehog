@@ -19,7 +19,6 @@
 
 package org.unigrid.hedgehog.command.cli;
 
-import jakarta.inject.Inject;
 import org.unigrid.hedgehog.command.util.RestClientCommand;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.client.Entity;

@@ -16,12 +16,12 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.model.network.handler;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import java.net.InetSocketAddress;
-import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.unigrid.hedgehog.command.option.GridnodeOptions;
@@ -30,7 +30,6 @@ import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.Topology;
 import static org.unigrid.hedgehog.model.network.handler.ConnectionHandler.SOCKET_ADDRESS_KEY;
 import org.unigrid.hedgehog.model.network.packet.PublishAllGridnodes;
-import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 
 @Slf4j
 @Sharable
@@ -53,7 +52,8 @@ public class PublishAllGridnodesHandler extends AbstractInboundHandler<PublishAl
 			for (Gridnode gridnode : obj.getGridnodes()) {
 				if (gridnode.getHostName().contains("0.0.0.0")
 					&& !gridnode.getId().equals(GridnodeOptions.getGridnodeKey())) {
-					final InetSocketAddress address = ctx.channel().parent().attr(SOCKET_ADDRESS_KEY).get();
+					final InetSocketAddress address = ctx.channel().parent()
+						.attr(SOCKET_ADDRESS_KEY).get();
 
 					if (address != null) {
 						log.atDebug().log(address.toString());

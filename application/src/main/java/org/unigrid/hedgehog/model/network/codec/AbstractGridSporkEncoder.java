@@ -74,7 +74,7 @@ public abstract class AbstractGridSporkEncoder<T extends Packet> extends Abstrac
 			ce.get().encodeChunk(ctx, spork.getData(), data);
 			ce.get().encodeChunk(ctx, spork.getPreviousData(), data);
 
-			if(Signature.isNewSignatureScheme()) {
+			if (Signature.isNewSignatureScheme()) {
 				data.writeByte(spork.getSignatures().size());
 				for (byte[] signature : spork.getSignatures()) {
 					data.writeShort(signature.length);

@@ -16,6 +16,7 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.model.network.codec;
 
 import io.netty.buffer.ByteBuf;
@@ -28,7 +29,6 @@ import org.unigrid.hedgehog.model.network.Topology;
 import org.unigrid.hedgehog.model.network.codec.api.PacketEncoder;
 import org.unigrid.hedgehog.model.network.packet.AskGridnodeDetails;
 import org.unigrid.hedgehog.model.network.packet.Packet;
-import org.unigrid.hedgehog.model.network.util.ByteBufUtils;
 
 public class AskGridnodeDetailsEncoder extends AbstractMessageToByteEncoder<AskGridnodeDetails>
 	implements PacketEncoder<AskGridnodeDetails> {
@@ -44,7 +44,7 @@ public class AskGridnodeDetailsEncoder extends AbstractMessageToByteEncoder<AskG
 	@Override
 	public Optional<ByteBuf> encode(ChannelHandlerContext ctx, AskGridnodeDetails in) throws Exception {
 		final ByteBuf out = Unpooled.buffer();
-	
+
 		out.writeShort(in.getMessage());
 		System.out.println("encoding gridnode-get");
 		return Optional.of(out);
@@ -54,5 +54,5 @@ public class AskGridnodeDetailsEncoder extends AbstractMessageToByteEncoder<AskG
 	public Packet.Type getCodecType() {
 		return Packet.Type.ASK_GRIDNODE_DETAILS;
 	}
-	
+
 }

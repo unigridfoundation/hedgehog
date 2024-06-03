@@ -28,7 +28,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.math.BigDecimal;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -79,8 +78,8 @@ public class MintSupplyResource extends CDIBridgeResource {
 
 		try {
 			Signature signature = new Signature(Optional.of(privateKey), Optional.empty());
-			if (signature.verifyMultiple(mintSupplyGrow.getData().getBytes(), mintSupplyGrow.getSignatures()) &&
-				Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
+			if (signature.verifyMultiple(mintSupplyGrow.getData().getBytes(), mintSupplyGrow.getSignatures())
+				&& Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
 				final MintSupply ms = ResourceHelper.getNewOrClonedSporkSection(
 					() -> sporkDatabase.getMintSupply(),
 					() -> new MintSupply()
@@ -93,8 +92,9 @@ public class MintSupplyResource extends CDIBridgeResource {
 				return ResourceHelper.commitAndSign(ms, privateKey, sporkDatabase, false, signable -> {
 					sporkDatabase.setMintSupply(signable);
 
-					Topology.sendAll(PublishSpork.builder().gridSpork(sporkDatabase.getMintSupply()).build(),
-						topology, Optional.empty()
+					Topology.sendAll(PublishSpork.builder()
+						.gridSpork(sporkDatabase.getMintSupply()).build(), topology,
+							Optional.empty()
 					);
 				});
 			}

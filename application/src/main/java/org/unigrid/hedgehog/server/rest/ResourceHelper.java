@@ -62,17 +62,17 @@ public class ResourceHelper {
 		return Response.ok().build();
 	}
 
-	public static <S extends Signable> Response commitAndSign(S signable, List<byte[]> signatures, SporkDatabase sporkDatabase,
-		boolean isUpdate, Consumer<S> consumer) {
+	public static <S extends Signable> Response commitAndSign(S signable, List<byte[]> signatures,
+		SporkDatabase sporkDatabase, boolean isUpdate, Consumer<S> consumer) {
 
 		try {
 			signable.signMultiple(signatures);
-		} catch(SigningException ex) {
+		} catch (SigningException ex) {
 			return Response.status(Response.Status.UNAUTHORIZED).entity(ex).build();
 		}
-		
+
 		consumer.accept(signable);
-		
+
 		if (isUpdate) {
 			return Response.noContent().build();
 		}

@@ -16,17 +16,17 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.command.cli;
 
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.core.Response;
 import org.unigrid.hedgehog.command.util.RestClientCommand;
 import org.unigrid.hedgehog.model.Json;
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "gridnode-list")
-public class GridnodeList implements Runnable{
+public class GridnodeList implements Runnable {
 
 	@Override
 	public void run() {

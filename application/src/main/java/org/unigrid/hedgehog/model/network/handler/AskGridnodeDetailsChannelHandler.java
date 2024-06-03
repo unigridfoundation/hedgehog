@@ -16,6 +16,7 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.model.network.handler;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -26,7 +27,6 @@ import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.Topology;
 import org.unigrid.hedgehog.model.network.packet.AskGridnodeDetails;
 import org.unigrid.hedgehog.model.network.packet.PublishAllGridnodes;
-import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 
 public class AskGridnodeDetailsChannelHandler extends AbstractInboundHandler<AskGridnodeDetails> {
 	public AskGridnodeDetailsChannelHandler() {
@@ -35,7 +35,8 @@ public class AskGridnodeDetailsChannelHandler extends AbstractInboundHandler<Ask
 
 	//TODO: change so it only sends to the one asking for the information.
 	@Override
-	public void typedChannelRead(ChannelHandlerContext context, AskGridnodeDetails askGridnodeDetails) throws Exception {
+	public void typedChannelRead(ChannelHandlerContext context, AskGridnodeDetails askGridnodeDetails)
+		throws Exception {
 		CDIUtil.resolveAndRun(Topology.class, topology -> {
 			final Set<Gridnode> gridnodes = topology.cloneGridnode();
 

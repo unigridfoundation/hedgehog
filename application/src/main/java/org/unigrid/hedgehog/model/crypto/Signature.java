@@ -16,19 +16,16 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.model.crypto;
 
-import jakarta.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.interfaces.ECPrivateKey;
@@ -40,19 +37,12 @@ import java.security.spec.ECPrivateKeySpec;
 import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.bitcoinj.core.ECKey;
 import org.unigrid.hedgehog.command.option.NetOptions;
-import org.unigrid.hedgehog.model.HedgehogConfig;
 
 @Slf4j
 public class Signature {
@@ -179,7 +169,7 @@ public class Signature {
 			return false;
 		}
 	}
-	
+
 	public boolean verifyMultiple(byte[] data, List<byte[]> signatures) {
 		try {
 			final java.security.Signature signature = java.security.Signature.getInstance(SIGNATURE_NAME);
@@ -231,7 +221,7 @@ public class Signature {
 			);
 		}
 	}
-	
+
 	public static boolean verifyMultiple(Signable signable, String key) throws VerifySignatureException {
 		try {
 			final Signature signature = new Signature(Optional.empty(), Optional.of(key));

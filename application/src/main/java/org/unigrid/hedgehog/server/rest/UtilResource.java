@@ -33,7 +33,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.Optional;
 import org.unigrid.hedgehog.model.HedgehogConfig;
@@ -107,7 +106,8 @@ public class UtilResource extends CDIBridgeResource {
 			return ResourceHelper.commitAndSign(mvs, privateKey, sporkDatabase, isUpdate, signable -> {
 				sporkDatabase.setMinimumVersionSpork(signable);
 
-				Topology.sendAll(PublishSpork.builder().gridSpork(sporkDatabase.getMinimumVersionSpork()).build(),
+				Topology.sendAll(PublishSpork.builder()
+					.gridSpork(sporkDatabase.getMinimumVersionSpork()).build(),
 					topology, Optional.empty()
 				);
 			});
@@ -129,10 +129,10 @@ public class UtilResource extends CDIBridgeResource {
 		final String oldVersion = data.getMinimumVersion();
 		final String oldHedgehogVersion = data.getMinimumVersion();
 		final String oldGridsporkVersion = data.getMinimumVersion();
-		
+
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
-		
+
 		ObjectNode minimumVersionNode = mapper.createObjectNode();
 		minimumVersionNode.put("version", oldVersion);
 		minimumVersionNode.put("hedgehog_protocoll", oldHedgehogVersion);

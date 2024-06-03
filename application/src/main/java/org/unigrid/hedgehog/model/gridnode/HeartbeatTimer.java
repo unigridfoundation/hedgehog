@@ -19,13 +19,12 @@
 
 package org.unigrid.hedgehog.model.gridnode;
 
-import jakarta.inject.Inject;
 import java.util.TimerTask;
 import lombok.SneakyThrows;
 
 public class HeartbeatTimer extends TimerTask {
 
-	Heartbeat heartbeat;
+	private Heartbeat heartbeat;
 
 	public HeartbeatTimer() {
 		heartbeat = new Heartbeat();

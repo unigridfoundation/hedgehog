@@ -30,7 +30,6 @@ import org.unigrid.hedgehog.model.cdi.CDIUtil;
 import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.Topology;
 import org.unigrid.hedgehog.model.network.packet.PublishAllGridnodes;
-import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 
 @Data
 @Slf4j

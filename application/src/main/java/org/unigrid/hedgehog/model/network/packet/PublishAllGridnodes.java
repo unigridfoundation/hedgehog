@@ -16,6 +16,7 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.model.network.packet;
 
 import java.io.Serializable;
@@ -31,7 +32,7 @@ import org.unigrid.hedgehog.model.gridnode.Gridnode;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class PublishAllGridnodes extends Packet implements Serializable{
+public class PublishAllGridnodes extends Packet implements Serializable {
 	public static final int DISTRIBUTION_FREQUENCY_MINUTES = 2;
 
 	@Builder.Default private Set<Gridnode> gridnodes = new HashSet<>();

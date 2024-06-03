@@ -16,19 +16,17 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.model;
 
 import com.sun.jna.platform.win32.KnownFolders;
 import com.sun.jna.platform.win32.Shell32Util;
-import jakarta.enterprise.context.ApplicationScoped;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
-import java.time.Instant;
-import java.util.Date;
 import java.util.Properties;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -40,7 +38,7 @@ public class HedgehogConfig {
 	private static final String CONFIG_FILE = "hedgehog.conf";
 	private static final String APPLICATION_NAME = "UNIGRID";
 	private static final String OSX_SUPPORT_DIR = "Library/Application Support";
-	private static final String ALPHANUMERIC_CHARACTERS = 
+	private static final String ALPHANUMERIC_CHARACTERS =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 	private String username;
@@ -53,7 +51,7 @@ public class HedgehogConfig {
 	@SneakyThrows
 	private void createConfig(File file) {
 		OutputStream fileOutput = new FileOutputStream(file);
-		
+
 		Properties prop = new Properties();
 		prop.put("username", generateRandomString());
 		prop.put("password", generateRandomString());
@@ -63,11 +61,11 @@ public class HedgehogConfig {
 	@SneakyThrows
 	private void getConfig() {
 		File file = getConfigFile();
-		
+
 		if (!file.exists()) {
 			createConfig(file);
 		}
-		
+
 		FileInputStream propsInput = new FileInputStream(file.getAbsolutePath());
 		Properties prop = new Properties();
 		prop.load(propsInput);
@@ -92,7 +90,7 @@ public class HedgehogConfig {
 				tail = Paths.get(".".concat(APPLICATION_NAME).toLowerCase()).toString();
 			}
 		}
-		
+
 		return Paths.get(head, tail).toString();
 	}
 

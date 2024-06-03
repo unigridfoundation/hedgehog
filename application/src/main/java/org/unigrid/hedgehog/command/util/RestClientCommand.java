@@ -48,7 +48,7 @@ public class RestClientCommand implements Runnable {
 		this(method, location);
 		this.defaultSupplier = defaultSupplier;
 	}
-	
+
 	public RestClientCommand(String method, String location, HedgehogConfig config) {
 		this(method, location + "/" + config.getUsername() + "/" + config.getPassword());
 	}

@@ -16,6 +16,7 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.model.network.codec;
 
 import io.netty.buffer.ByteBuf;
@@ -27,7 +28,6 @@ import org.unigrid.hedgehog.model.network.Topology;
 import org.unigrid.hedgehog.model.network.packet.AskGridnodeDetails;
 import org.unigrid.hedgehog.model.network.codec.api.PacketDecoder;
 import org.unigrid.hedgehog.model.network.packet.Packet;
-import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 
 public class AskGridnodeDetailsDecoder extends AbstractReplayingDecoder<AskGridnodeDetails>
 	implements PacketDecoder<AskGridnodeDetails> {
@@ -49,5 +49,5 @@ public class AskGridnodeDetailsDecoder extends AbstractReplayingDecoder<AskGridn
 	public Packet.Type getCodecType() {
 		return Packet.Type.ASK_GRIDNODE_DETAILS;
 	}
-	
+
 }

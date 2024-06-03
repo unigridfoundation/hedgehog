@@ -20,7 +20,6 @@
 package org.unigrid.hedgehog.server.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -89,7 +88,7 @@ public class GridnodeResource extends CDIBridgeResource {
 
 		String json = "";
 		ObjectMapper mapper = new ObjectMapper();
-		
+
 		json = mapper.writeValueAsString(gridnodes);
 		return Response.ok(json).build();
 	}
@@ -207,7 +206,7 @@ public class GridnodeResource extends CDIBridgeResource {
 		gridnodes.forEach(gridnode -> gridnode.setStatus(Gridnode.Status.INACTIVE));
 		return Response.status(Response.Status.OK).build();*/
 	}
-	
+
 	@Path("/repopulate")
 	@GET
 	public Response repopulate() {

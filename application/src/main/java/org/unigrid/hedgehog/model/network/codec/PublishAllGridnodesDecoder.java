@@ -16,6 +16,7 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.model.network.codec;
 
 import io.netty.buffer.ByteBuf;
@@ -30,7 +31,6 @@ import org.unigrid.hedgehog.model.network.Topology;
 import org.unigrid.hedgehog.model.network.codec.api.PacketDecoder;
 import org.unigrid.hedgehog.model.network.packet.Packet;
 import org.unigrid.hedgehog.model.network.packet.PublishAllGridnodes;
-import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 import org.unigrid.hedgehog.model.network.util.ByteBufUtils;
 
 @Slf4j
@@ -47,7 +47,7 @@ public class PublishAllGridnodesDecoder extends AbstractReplayingDecoder<Publish
 	public Optional<PublishAllGridnodes> typedDecode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
 
 		final PublishAllGridnodes gridnodePacket = PublishAllGridnodes.builder().build();
-		
+
 		final int numGridnodes = in.readShort();
 		in.skipBytes(6 /* 48 bytes */);
 

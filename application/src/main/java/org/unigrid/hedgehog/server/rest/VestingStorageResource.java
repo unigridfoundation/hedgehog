@@ -16,6 +16,7 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.server.rest;
 
 import jakarta.validation.constraints.NotNull;
@@ -28,11 +29,9 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.math.BigDecimal;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -99,7 +98,8 @@ public class VestingStorageResource extends CDIBridgeResource {
 		@NotNull @HeaderParam("privateKey") String privateKey) {
 		try {
 			Signature signature = new Signature(Optional.of(privateKey), Optional.empty());
-			if (signature.verifyMultiple(vestingStorageGrow.getData().getBytes(), vestingStorageGrow.getSignatures())
+			if (signature.verifyMultiple(vestingStorageGrow.getData().getBytes(),
+				vestingStorageGrow.getSignatures())
 				&& Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
 				final VestingStorage vs = ResourceHelper.getNewOrClonedSporkSection(
 					() -> sporkDatabase.getVestingStorage(),
@@ -111,7 +111,8 @@ public class VestingStorageResource extends CDIBridgeResource {
 					.percent(vestingStorageGrow.getPercent()).start(vestingStorageGrow.getStart())
 					.build();
 				final VestingStorage.SporkData data = vs.getData();
-				final Vesting oldVesting = data.getVestingAddresses().get(Address.builder().wif(address).build());
+				final Vesting oldVesting = data.getVestingAddresses().get(Address.builder()
+					.wif(address).build());
 				final boolean isUpdate = Objects.nonNull(oldVesting);
 
 				vs.archive();

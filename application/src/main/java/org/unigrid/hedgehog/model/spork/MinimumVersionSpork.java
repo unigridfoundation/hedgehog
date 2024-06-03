@@ -16,6 +16,7 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
+
 package org.unigrid.hedgehog.model.spork;
 
 import java.io.Serializable;
@@ -26,7 +27,7 @@ import org.unigrid.hedgehog.model.network.chunk.ChunkData;
 
 @Data @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
-public class MinimumVersionSpork extends GridSpork implements Serializable{
+public class MinimumVersionSpork extends GridSpork implements Serializable {
 
 	public MinimumVersionSpork() {
 		setType(Type.MINIMUM_VERSION);
@@ -50,7 +51,7 @@ public class MinimumVersionSpork extends GridSpork implements Serializable{
 		@Override
 		public ChunkData empty() {
 			SporkData data = new SporkData();
-			
+
 			data.setMinimumVersion("");
 			data.setMinimumHedgehogProtocoll("");
 			data.setMinimumGridsporkProtocoll("");
