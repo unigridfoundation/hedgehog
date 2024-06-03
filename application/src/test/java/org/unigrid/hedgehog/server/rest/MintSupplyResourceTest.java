@@ -24,6 +24,8 @@ import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
 import net.jqwik.api.ForAll;
@@ -32,12 +34,13 @@ import net.jqwik.api.constraints.BigRange;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import org.unigrid.hedgehog.model.crypto.Signature;
+import org.unigrid.hedgehog.model.network.MintSupplyGrow;
 import org.unigrid.hedgehog.model.spork.MintSupply;
 
 public class MintSupplyResourceTest extends BaseRestClientTest {
 	@SneakyThrows
 	@Property(tries = 50)
-	public void shoulBeChangeable(@ForAll("provideSignature") Signature signature,
+	public void shoulBeChangeable(@ForAll("provideSignatures") List<Signature> signatures,
 		@ForAll @BigRange(min = "0", max = "1000000") BigDecimal maxSupply) {
 
 		final String url = "/gridspork/mint-supply/";
@@ -48,9 +51,17 @@ public class MintSupplyResourceTest extends BaseRestClientTest {
 			final MintSupply.SporkData data = response.readEntity(MintSupply.class).getData();
 			originalMaxSupply = data.getMaxSupply();
 		}
+		
+		List<String> signs = new ArrayList<>();
+		for (int i = 0; i < 2; i++) {
+			signs.add(signatures.get(i).sign(maxSupply.toString().getBytes()).toString());
+		}
 
-		final Response putResponse = client.putWithHeaders(url, Entity.text(maxSupply),
-			new MultivaluedHashMap(Map.of("privateKey", signature.getPrivateKey()))
+		MintSupplyGrow mintSupplyGrow = MintSupplyGrow.builder().supply(maxSupply).data(maxSupply.toString())
+			.signatures(signs).build();
+
+		final Response putResponse = client.putWithHeaders(url, Entity.json(mintSupplyGrow),
+			new MultivaluedHashMap(Map.of("privateKey", signatures.get(0).getPrivateKey()))
 		);
 
 		final MintSupply.SporkData data = client.getEntity(url, MintSupply.class).getData();

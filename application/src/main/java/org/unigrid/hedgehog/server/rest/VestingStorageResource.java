@@ -16,7 +16,6 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
-
 package org.unigrid.hedgehog.server.rest;
 
 import jakarta.validation.constraints.NotNull;
@@ -29,6 +28,11 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.math.BigDecimal;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +40,9 @@ import org.unigrid.hedgehog.model.Address;
 import org.unigrid.hedgehog.model.cdi.CDIBridgeInject;
 import org.unigrid.hedgehog.model.cdi.CDIBridgeResource;
 import org.unigrid.hedgehog.model.crypto.NetworkKey;
+import org.unigrid.hedgehog.model.crypto.Signature;
 import org.unigrid.hedgehog.model.network.Topology;
+import org.unigrid.hedgehog.model.network.VestingStorageGrow;
 import org.unigrid.hedgehog.model.network.packet.PublishSpork;
 import org.unigrid.hedgehog.model.spork.SporkDatabase;
 import org.unigrid.hedgehog.model.spork.VestingStorage;
@@ -48,6 +54,7 @@ import org.unigrid.hedgehog.server.p2p.P2PServer;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class VestingStorageResource extends CDIBridgeResource {
+
 	@CDIBridgeInject
 	private P2PServer p2pServer;
 
@@ -57,7 +64,8 @@ public class VestingStorageResource extends CDIBridgeResource {
 	@CDIBridgeInject
 	private Topology topology;
 
-	@Path("/vesting-storage") @GET
+	@Path("/vesting-storage")
+	@GET
 	public Response list() {
 		final VestingStorage vs = sporkDatabase.getVestingStorage();
 
@@ -68,7 +76,8 @@ public class VestingStorageResource extends CDIBridgeResource {
 		return Response.ok().entity(sporkDatabase.getVestingStorage()).build();
 	}
 
-	@Path("/vesting-storage/{address}") @GET
+	@Path("/vesting-storage/{address}")
+	@GET
 	public Response get(@NotNull @PathParam("address") String address) {
 		if (Objects.isNull(sporkDatabase.getVestingStorage())) {
 			return Response.noContent().build();
@@ -84,32 +93,43 @@ public class VestingStorageResource extends CDIBridgeResource {
 		return Response.ok().entity(vesting).build();
 	}
 
-	@Path("/vesting-storage/{address}") @PUT
-	public Response grow(@NotNull Vesting vesting, @NotNull @PathParam("address") String address,
+	@Path("/vesting-storage/{address}")
+	@PUT
+	public Response grow(@NotNull VestingStorageGrow vestingStorageGrow, @NotNull @PathParam("address") String address,
 		@NotNull @HeaderParam("privateKey") String privateKey) {
-
-		if (Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
-			final VestingStorage vs = ResourceHelper.getNewOrClonedSporkSection(
-				() -> sporkDatabase.getVestingStorage(),
-				() -> new VestingStorage()
-			);
-
-			final VestingStorage.SporkData data = vs.getData();
-			final Vesting oldVesting = data.getVestingAddresses().get(Address.builder().wif(address).build());
-			final boolean isUpdate = Objects.nonNull(oldVesting);
-
-			vs.archive();
-			data.getVestingAddresses().put(Address.builder().wif(address).build(), vesting);
-
-			return ResourceHelper.commitAndSign(vs, privateKey, sporkDatabase, isUpdate, signable -> {
-				sporkDatabase.setVestingStorage(signable);
-
-				Topology.sendAll(PublishSpork.builder().gridSpork(
-					sporkDatabase.getVestingStorage()).build(), topology, Optional.empty()
+		try {
+			Signature signature = new Signature(Optional.of(privateKey), Optional.empty());
+			if (signature.verifyMultiple(vestingStorageGrow.getData().getBytes(), vestingStorageGrow.getSignatures())
+				&& Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
+				final VestingStorage vs = ResourceHelper.getNewOrClonedSporkSection(
+					() -> sporkDatabase.getVestingStorage(),
+					() -> new VestingStorage()
 				);
-			});
-		}
+				Vesting vesting = Vesting.builder().amount(vestingStorageGrow.getAmount())
+					.block(vestingStorageGrow.getBlock()).cliff(vestingStorageGrow.getCliff())
+					.duration(vestingStorageGrow.getDuration()).parts(vestingStorageGrow.getParts())
+					.percent(vestingStorageGrow.getPercent()).start(vestingStorageGrow.getStart())
+					.build();
+				final VestingStorage.SporkData data = vs.getData();
+				final Vesting oldVesting = data.getVestingAddresses().get(Address.builder().wif(address).build());
+				final boolean isUpdate = Objects.nonNull(oldVesting);
 
-		return Response.status(Response.Status.UNAUTHORIZED).build();
+				vs.archive();
+				data.getVestingAddresses().put(Address.builder().wif(address).build(), vesting);
+
+				return ResourceHelper.commitAndSign(vs, privateKey, sporkDatabase, isUpdate, signable -> {
+					sporkDatabase.setVestingStorage(signable);
+
+					Topology.sendAll(PublishSpork.builder().gridSpork(
+						sporkDatabase.getVestingStorage()).build(), topology, Optional.empty()
+					);
+				});
+			}
+
+			return Response.status(Response.Status.UNAUTHORIZED).build();
+		} catch (InvalidAlgorithmParameterException | InvalidKeySpecException | NoSuchAlgorithmException ex) {
+			log.atTrace().log(ex.getMessage());
+			return Response.status(Response.Status.EXPECTATION_FAILED).build();
+		}
 	}
 }

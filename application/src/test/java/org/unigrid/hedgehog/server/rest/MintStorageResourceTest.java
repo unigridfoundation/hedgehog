@@ -47,6 +47,7 @@ import org.unigrid.hedgehog.jqwik.TestFileOutput;
 import org.unigrid.hedgehog.model.Address;
 import org.unigrid.hedgehog.model.crypto.Signature;
 import org.unigrid.hedgehog.model.network.GrowMint;
+import org.unigrid.hedgehog.model.network.ValidatorGrow;
 import org.unigrid.hedgehog.model.spork.MintStorage;
 import org.unigrid.hedgehog.model.spork.MintStorage.SporkData.Location;
 import org.unigrid.hedgehog.model.spork.ValidatorSpork;
@@ -140,7 +141,7 @@ public class MintStorageResourceTest extends BaseRestClientTest {
 
 	@SneakyThrows
 	@Property(tries = 50)
-	public void shouldVerifyAddedKeyInList(@ForAll("provideSignature") Signature signature,
+	public void shouldVerifyAddedKeyInList(@ForAll("provideSignatures") List<Signature> signatures,
 		@ForAll("providePubKey") String pubKey) {
 
 		final String url = "/gridspork/validator/";
@@ -152,9 +153,18 @@ public class MintStorageResourceTest extends BaseRestClientTest {
 			final ValidatorSpork.SporkData data = response.readEntity(ValidatorSpork.class).getData();
 			originalNumMints = data.getValidatorKeys().size();
 		}
+		List<String> signs = new ArrayList();
+		
+		for (int i = 0; i < 2; i++) {
+			signs.add(signatures.get(i).sign(pubKey.getBytes()).toString());
+		}
+		
+		ValidatorGrow validatorGrow = ValidatorGrow.builder().pubKey(pubKey).data(url)
+			.signatures(signs).build();
+
 		final Response putResponse = client.putWithHeaders(url,
-			Entity.text(pubKey), new MultivaluedHashMap(Map.of("privateKey",
-			signature.getPrivateKey()))
+			Entity.json(validatorGrow), new MultivaluedHashMap(Map.of("privateKey",
+			signatures.get(0).getPrivateKey()))
 		);
 
 		if (Status.fromStatusCode(putResponse.getStatus()) == Status.OK) {

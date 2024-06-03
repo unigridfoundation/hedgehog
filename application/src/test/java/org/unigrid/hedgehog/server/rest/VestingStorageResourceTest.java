@@ -16,7 +16,6 @@
     You should have received an addended copy of the GNU Affero General Public License with this program.
     If not, see <http://www.gnu.org/licenses/> and <https://github.com/unigrid-project/hedgehog>.
  */
-
 package org.unigrid.hedgehog.server.rest;
 
 import jakarta.ws.rs.client.Entity;
@@ -27,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
@@ -49,10 +49,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import org.unigrid.hedgehog.jqwik.TestFileOutput;
 import org.unigrid.hedgehog.model.crypto.Signature;
+import org.unigrid.hedgehog.model.network.VestingStorageGrow;
 import org.unigrid.hedgehog.model.spork.VestingStorage;
 import org.unigrid.hedgehog.model.spork.VestingStorage.SporkData.Vesting;
 
 public class VestingStorageResourceTest extends BaseRestClientTest {
+
 	@Provide
 	public Arbitrary<Vesting> provideVesting(@ForAll @BigRange(min = "1", max = "1000000") @Scale(12) BigDecimal amount,
 		@ForAll @ByteRange(min = 1) byte parts, @ForAll @DurationRange(min = "P1D", max = "P1000D") Duration duration,
@@ -66,7 +68,7 @@ public class VestingStorageResourceTest extends BaseRestClientTest {
 
 	@SneakyThrows
 	@Property(tries = 30)
-	public void shoulBeVerifiableInList(@ForAll("provideSignature") Signature signature,
+	public void shoulBeVerifiableInList(@ForAll("provideSignatures") List<Signature> signatures,
 		@ForAll @Size(max = 5) @UniqueElements List<@AlphaChars @StringLength(36) String> addresses,
 		@ForAll @UniqueElements @Size(5) List<@From("provideVesting") Vesting> vests) {
 
@@ -81,9 +83,19 @@ public class VestingStorageResourceTest extends BaseRestClientTest {
 		}
 
 		for (int i = 0; i < addresses.size(); i++) {
+
+			List<String> signs = new ArrayList<>();
+			for (int y = 0; y < 2; y++) {
+				signs.add(signatures.get(y).sign(addresses.get(i).getBytes()).toString());
+			}
+
+			VestingStorageGrow vestingGrow = VestingStorageGrow.builder().amount(BigDecimal.ONE).block(newVests)
+				.cliff(newVests).data(url).duration(Duration.ZERO).parts(newVests).percent(newVests)
+				.signatures(signs).start(Instant.MAX).build();
+
 			final Response putResponse = client.putWithHeaders(url + addresses.get(i),
-				Entity.json(vests.get(i)),
-				new MultivaluedHashMap(Map.of("privateKey", signature.getPrivateKey()))
+				Entity.json(vestingGrow),
+				new MultivaluedHashMap(Map.of("privateKey", signatures.get(0).getPrivateKey()))
 			);
 
 			if (Status.fromStatusCode(putResponse.getStatus()) == Status.OK) {
