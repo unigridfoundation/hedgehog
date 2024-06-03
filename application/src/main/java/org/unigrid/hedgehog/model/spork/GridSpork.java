@@ -88,6 +88,7 @@ public class GridSpork implements Serializable, Signable {
 		@Getter
 		private final short value;
 
+		@SuppressWarnings("CyclomaticComplexity")
 		public static Type get(short value) {
 			switch (value) {
 				case 1000:
@@ -121,6 +122,7 @@ public class GridSpork implements Serializable, Signable {
 		type = Type.get(value);
 	}
 
+	@SuppressWarnings("CyclomaticComplexity")
 	public static GridSpork create(Type type) {
 		switch (type) {
 			case MINT_STORAGE:

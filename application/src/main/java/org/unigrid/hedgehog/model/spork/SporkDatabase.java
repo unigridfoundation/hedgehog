@@ -63,6 +63,7 @@ public class SporkDatabase implements Serializable {
 		SerializationUtils.serialize(sporkDatabase, stream);
 	}
 
+	@SuppressWarnings("CyclomaticComplexity")
 	public GridSpork get(Type gridSporkType) {
 		switch (gridSporkType) {
 			case MINT_STORAGE: return mintStorage;
@@ -75,6 +76,7 @@ public class SporkDatabase implements Serializable {
 		}
 	}
 
+	@SuppressWarnings("CyclomaticComplexity")
 	public void set(GridSpork gridSpork) {
 		switch (gridSpork.getType()) {
 			case MINT_STORAGE:
