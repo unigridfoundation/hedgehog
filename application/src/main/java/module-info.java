@@ -69,4 +69,5 @@ module org.unigrid.hedgehog {
 	opens org.unigrid.hedgehog.model.s3.entity to jakarta.xml.bind;
 	
 	exports org.unigrid.hedgehog.model.gridnode to com.fasterxml.jackson.databind;
+	exports org.unigrid.hedgehog.model.network.handler.helpers to weld.core.impl;
 }

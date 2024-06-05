@@ -175,24 +175,41 @@ public class Signature {
 			final java.security.Signature signature = java.security.Signature.getInstance(SIGNATURE_NAME);
 			signature.initVerify(publicKey);
 			signature.update(data);
-			int numConfirms = 0;
-			for (byte[] sign : signatures) {
-				if (verify(data, sign)) {
-					numConfirms++;
-				}
-				for (String s : NetworkKey.getPublicKeys()) {
-					Signature otherSignature = new Signature(Optional.empty(), Optional.of(s));
-					if  (!s.equals(getPublicKey()) && otherSignature.verify(data, sign)) {
-						numConfirms++;
-					}
-				}
-			}
-			return numConfirms >= NUM_VERIFYED_CONFIRMS;
+			return countValidSignatures(data, signatures) >= NUM_VERIFYED_CONFIRMS;
 		} catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException
 			| InvalidKeySpecException | VerifySignatureException | InvalidAlgorithmParameterException ex) {
 			log.atTrace().log("{}:{}", ex.getMessage(), ExceptionUtils.getStackTrace(ex));
 			return false;
 		}
+	}
+
+	private int countValidSignatures(byte[] data, List<byte[]> signatures) throws InvalidKeySpecException,
+		InvalidKeyException, SignatureException, VerifySignatureException, InvalidAlgorithmParameterException,
+		NoSuchAlgorithmException {
+		int numConfirms = 0;
+		for (byte[] sign : signatures) {
+			numConfirms += countConfirmations(data, sign);
+		}
+		return numConfirms;
+	}
+
+	private int countConfirmations(byte[] data, byte[] sign) throws InvalidKeySpecException, InvalidKeyException,
+		SignatureException, VerifySignatureException, InvalidAlgorithmParameterException,
+		NoSuchAlgorithmException {
+		int confirmations = verify(data, sign) ? 1 : 0;
+		for (String s : NetworkKey.getPublicKeys()) {
+			if (!s.equals(getPublicKey())) {
+				confirmations += verifyWithOtherKey(data, sign, s);
+			}
+		}
+		return confirmations;
+	}
+
+	private int verifyWithOtherKey(byte[] data, byte[] sign, String publicKeyStr) throws InvalidKeySpecException,
+		InvalidKeyException, SignatureException, VerifySignatureException, InvalidAlgorithmParameterException,
+		NoSuchAlgorithmException {
+		Signature otherSignature = new Signature(Optional.empty(), Optional.of(publicKeyStr));
+		return otherSignature.verify(data, sign) ? 1 : 0;
 	}
 
 	public boolean verify(byte[] data, byte[] signedData) throws VerifySignatureException {

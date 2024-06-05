@@ -186,12 +186,37 @@ public class GridSpork implements Serializable, Signable {
 
 	@Override
 	public void signMultiple(List<byte[]> signatures) throws SigningException {
-		for (byte[] sign: signatures) {
+		for (byte[] sign : signatures) {
 			this.signatures.add(sign);
 		}
 	}
 
 	@JsonIgnore
+	public boolean isValidSignature() {
+		for (String key : NetworkKey.getPublicKeys()) {
+			if (verifySignature(key)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@JsonIgnore
+	private boolean verifySignature(String key) {
+		try {
+			if (Signature.isNewSignatureScheme()) {
+				return Signature.verifyMultiple(this, key);
+			} else {
+				return Signature.verify(this, key);
+			}
+		} catch (VerifySignatureException ex) {
+			log.atTrace().log("{}:{}", ex.getMessage(), ExceptionUtils.getStackTrace(ex));
+			return false;
+		}
+	}
+
+	/*@JsonIgnore
 	public boolean isValidSignature() {
 		try {
 			if (Signature.isNewSignatureScheme()) {
@@ -212,8 +237,7 @@ public class GridSpork implements Serializable, Signable {
 		}
 
 		return false;
-	}
-
+	}*/
 	/**
 	 * Archives the spork by copying {@link #data} and {@link #timeStamp} to {@link #previousData} and
 	 * {@link #previousTimeStamp}. This should typically be done right before the spork is populated with new

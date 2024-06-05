@@ -21,20 +21,19 @@ package org.unigrid.hedgehog.model.network.handler;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
-import java.net.InetSocketAddress;
-import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.unigrid.hedgehog.command.option.GridnodeOptions;
 import org.unigrid.hedgehog.model.cdi.CDIUtil;
 import org.unigrid.hedgehog.model.gridnode.Gridnode;
 import org.unigrid.hedgehog.model.network.Topology;
-import static org.unigrid.hedgehog.model.network.handler.ConnectionHandler.SOCKET_ADDRESS_KEY;
+import org.unigrid.hedgehog.model.network.handler.helpers.ProcessGridnodeHelper;
 import org.unigrid.hedgehog.model.network.packet.PublishGridnode;
 
 @Slf4j
 @Sharable
 public class PublishGridnodeChannelHandler extends AbstractInboundHandler<PublishGridnode> {
+
+	private ProcessGridnodeHelper processGirdnodeHelper = new ProcessGridnodeHelper();
 
 	public PublishGridnodeChannelHandler() {
 		super(PublishGridnode.class);
@@ -46,41 +45,7 @@ public class PublishGridnodeChannelHandler extends AbstractInboundHandler<Publis
 	public void typedChannelRead(ChannelHandlerContext ctx, PublishGridnode obj) throws Exception {
 		CDIUtil.resolveAndRun(Topology.class, topology -> {
 			Set<Gridnode> gridnodes = topology.cloneGridnode();
-			boolean isEmpty = true;
-			//System.out.println(gridnodes.size());
-
-			if (obj.getGridnode().getHostName().contains("0.0.0.0")
-				&& !obj.getGridnode().getId().equals(GridnodeOptions.getGridnodeKey())) {
-				final InetSocketAddress address = ctx.channel().parent().attr(SOCKET_ADDRESS_KEY).get();
-
-				if (address != null) {
-					log.atDebug().log(address.toString());
-					log.atTrace().log("Seding with port {} from source {}",
-						address.getPort(), address.getAddress());
-					obj.getGridnode().setHostName(address.getAddress().getHostAddress()
-						+ ":" + address.getPort());
-				}
-			}
-
-			for (Gridnode g: gridnodes) {
-				if (g.getId().equals(obj.getGridnode().getId())) {
-					isEmpty = false;
-				}
-			}
-
-			if (isEmpty) {
-				topology.addGridnode(Gridnode.builder().id(obj.getGridnode().getId())
-					.status(obj.getGridnode().getStatus())
-					.hostName(obj.getGridnode().getHostName()).build());
-				Topology.sendAll(PublishGridnode.builder().gridnode(obj.getGridnode()).build(),
-					topology, Optional.empty());
-			} else {
-				topology.modifyGridnode(obj.getGridnode(), g -> {
-					log.atDebug().log("Modifying a gridnode");
-					g.setStatus(obj.getGridnode().getStatus());
-					g.setHostName(obj.getGridnode().getHostName());
-				});
-			}
+			processGirdnodeHelper.processGridnode(ctx, obj.getGridnode(), gridnodes, topology);
 		});
 	}
 }
