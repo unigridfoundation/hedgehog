@@ -3,7 +3,7 @@
 	<name>Unigrid Hedgehog Parent</name>
 	<groupId>org.unigrid.hedgehog</groupId>
 	<artifactId>hedgehog-parent</artifactId>
-	<version>0.0.8-SNAPSHOT</version>
+	<version>0.0.9-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

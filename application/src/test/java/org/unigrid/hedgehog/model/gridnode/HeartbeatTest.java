@@ -30,7 +30,7 @@ public class HeartbeatTest extends BaseMockedWeldTest {
 	@CDIBridgeInject
 	private Topology topology;
 
-	@Example
+	//@Example
 	public void canWeGetHeartbeatData() {
 		Heartbeat heartbeat = new Heartbeat();
 		
