@@ -76,7 +76,7 @@ public class LambdaResource extends CDIBridgeResource {
 
 	@POST
 	@Path("lambda/createFuntionUrlConfig")
-	public Response createFuntionUrlCongif(@NotNull CreateFunctionUrlConfig createFuntionUrlConfig) {
+	public Response createFuntionUrlConfig(@NotNull CreateFunctionUrlConfig createFuntionUrlConfig) {
 		return Response.status(Response.Status.NOT_IMPLEMENTED).build();
 	}
 }
