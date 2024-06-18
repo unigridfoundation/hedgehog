@@ -91,17 +91,23 @@ public class UtilResource extends CDIBridgeResource {
 
 			final MinimumVersionSpork.SporkData data = mvs.getData();
 			final String olVersion = data.getMinimumVersion();
-			boolean isUpdate = Objects.nonNull(olVersion);
-			final String oldHedgehogVersion = data.getMinimumVersion();
-			isUpdate = Objects.nonNull(oldHedgehogVersion);
-			final String oldGridsporkVersion = data.getMinimumVersion();
-			isUpdate = Objects.nonNull(oldGridsporkVersion);
+			boolean isUpdateVersion = Objects.nonNull(olVersion);
+			final String oldHedgehogVersion = data.getMinimumHedgehogProtocoll();
+			boolean isUpdateHedgehogVersion = Objects.nonNull(oldHedgehogVersion);
+			final String oldGridsporkVersion = data.getMinimumGridsporkProtocoll();
+			boolean isUpdateGridsporkVersion = Objects.nonNull(oldGridsporkVersion);
 
 			mvs.archive();
 
 			data.setMinimumVersion(version);
 			data.setMinimumHedgehogProtocoll(hedgehogProtocoll);
 			data.setMinimumGridsporkProtocoll(gridsporkProtocoll);
+
+			boolean isUpdate = false;
+
+			if (isUpdateVersion || isUpdateHedgehogVersion || isUpdateGridsporkVersion) {
+				isUpdate = true;
+			}
 
 			return ResourceHelper.commitAndSign(mvs, privateKey, sporkDatabase, isUpdate, signable -> {
 				sporkDatabase.setMinimumVersionSpork(signable);
@@ -127,8 +133,8 @@ public class UtilResource extends CDIBridgeResource {
 		);
 		final MinimumVersionSpork.SporkData data = mvs.getData();
 		final String oldVersion = data.getMinimumVersion();
-		final String oldHedgehogVersion = data.getMinimumVersion();
-		final String oldGridsporkVersion = data.getMinimumVersion();
+		final String oldHedgehogVersion = data.getMinimumHedgehogProtocoll();
+		final String oldGridsporkVersion = data.getMinimumGridsporkProtocoll();
 
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
