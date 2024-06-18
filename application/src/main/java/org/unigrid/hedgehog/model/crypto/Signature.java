@@ -47,7 +47,7 @@ import org.unigrid.hedgehog.command.option.NetOptions;
 @Slf4j
 public class Signature {
 
-	private static final long NEW_SIGNATURE_SCHEME_TIME = Instant.parse("2024-05-30T00:00:00Z").getEpochSecond();
+	private static final long NEW_SIGNATURE_SCHEME_TIME = Instant.parse("2024-07-30T00:00:00Z").getEpochSecond();
 	private static final int NUM_VERIFYED_CONFIRMS = 2;
 	private static final String KEYPAIR_NAME = "EC";
 	private static final String SIGNATURE_NAME = "SHA512WithECDSA";

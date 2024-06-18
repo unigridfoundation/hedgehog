@@ -73,6 +73,7 @@ public class BaseSporkDatabaseTest extends BaseMockedWeldTest {
 			
 			case MINIMUM_VERSION:
 				sporkDatabase.setMinimumVersionSpork((MinimumVersionSpork) gridSpork);
+				break;
 
 			case VESTING_STORAGE:
 				sporkDatabase.setVestingStorage((VestingStorage) gridSpork);

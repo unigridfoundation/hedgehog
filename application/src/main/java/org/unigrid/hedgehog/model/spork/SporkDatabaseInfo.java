@@ -36,7 +36,7 @@ public class SporkDatabaseInfo implements Serializable {
 	private Overview<Integer, String> mintStorageEntries = new Overview(0, LASTCHANGED_NEVER);
 	private Overview<BigDecimal, String> mintSupply = new Overview(BigDecimal.ZERO, LASTCHANGED_NEVER);
 	private Overview<Integer, String> vestingStoragEntries = new Overview(0, LASTCHANGED_NEVER);
-	private Overview<String, String> minimumVersionEntries = new Overview(0, LASTCHANGED_NEVER);
+	private Overview<String, String> minimumVersionEntries = new Overview("", LASTCHANGED_NEVER);
 
 	public SporkDatabaseInfo(SporkDatabase sporkDatabase) {
 		ExceptionUtil.swallow(() -> {
@@ -79,7 +79,7 @@ public class SporkDatabaseInfo implements Serializable {
 				final String amount = data.getMinimumVersion();
 				final Instant lastChanged = sporkDatabase.getMinimumVersionSpork().getTimeStamp();
 
-				minimumVersionEntries.amount = data.getMinimumVersion();
+				minimumVersionEntries.amount = amount;
 				minimumVersionEntries.lastChanged = lastChanged.toString();
 			}
 		}, NullPointerException.class);

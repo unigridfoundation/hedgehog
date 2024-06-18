@@ -41,6 +41,7 @@ public class SporkDatabaseInfoTest extends BaseSporkDatabaseTest {
 		assertThat(info.getMintStorageEntries().getLastChanged(), equalTo(SporkDatabaseInfo.LASTCHANGED_NEVER));
 		assertThat(info.getMintSupply().getLastChanged(), equalTo(SporkDatabaseInfo.LASTCHANGED_NEVER));
 		assertThat(info.getVestingStoragEntries().getLastChanged(), equalTo(SporkDatabaseInfo.LASTCHANGED_NEVER));
+		assertThat(info.getMinimumVersionEntries().getLastChanged(), equalTo(SporkDatabaseInfo.LASTCHANGED_NEVER));
 	}
 
 	private <T> void assertOverview(Overview overview, GridSpork gridSpork, Supplier<T> amountSupplier) {
@@ -70,6 +71,11 @@ public class SporkDatabaseInfoTest extends BaseSporkDatabaseTest {
 		assertOverview(info.getVestingStoragEntries(), sporkDatabase.getVestingStorage(), () -> {
 			return ((VestingStorage.SporkData) sporkDatabase.getVestingStorage().getData())
 				.getVestingAddresses().size();
+		});
+		
+		assertOverview(info.getMinimumVersionEntries(), sporkDatabase.getMinimumVersionSpork(), () -> {
+			return ((MinimumVersionSpork.SporkData) sporkDatabase.getMinimumVersionSpork().getData())
+				.getMinimumVersion();
 		});
 	}
 }
