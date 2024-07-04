@@ -33,6 +33,8 @@ import org.unigrid.hedgehog.model.cdi.CDIBridgeResource;
 import org.unigrid.hedgehog.model.lambda.LambdaDeploy;
 import org.unigrid.hedgehog.model.lambda.entity.AddLayerVersionPermisson;
 import org.unigrid.hedgehog.model.lambda.entity.AddPermission;
+import org.unigrid.hedgehog.model.lambda.entity.CreateAlias;
+import org.unigrid.hedgehog.model.lambda.entity.CreateCodeSigningConfig;
 import org.unigrid.hedgehog.model.lambda.entity.CreateFunction;
 import org.unigrid.hedgehog.model.lambda.entity.CreateFunctionUrlConfig;
 import org.unigrid.hedgehog.model.network.Topology;
@@ -65,6 +67,18 @@ public class LambdaResource extends CDIBridgeResource {
 	@POST
 	@Path("lambda/addPermisson")
 	public Response addPermission(@NotNull AddPermission addPermission) {
+		return Response.status(Response.Status.NOT_IMPLEMENTED).build();
+	}
+	
+	@POST
+	@Path("lambda/createAlias")
+	public Response createAlias(@NotNull CreateAlias createAlias) {
+		return Response.status(Response.Status.NOT_IMPLEMENTED).build();
+	}
+
+	@POST
+	@Path("lambda/createCodeSigningConfig")
+	public Response createCodeSigningConfig(@NotNull CreateCodeSigningConfig createCodeSignConfig) {
 		return Response.status(Response.Status.NOT_IMPLEMENTED).build();
 	}
 
