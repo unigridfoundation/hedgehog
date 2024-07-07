@@ -41,6 +41,7 @@ import net.jqwik.api.constraints.StringLength;
 import net.jqwik.api.constraints.Positive;
 import net.jqwik.api.constraints.Size;
 import net.jqwik.api.constraints.UniqueElements;
+import org.apache.commons.codec.binary.Hex;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import org.unigrid.hedgehog.jqwik.TestFileOutput;
@@ -85,16 +86,17 @@ public class MintStorageResourceTest extends BaseRestClientTest {
 		}
 
 		for (Location l : locations) {
-			byte[] data = new StringBuilder().append(amount).append(",")
+			String stringData = new StringBuilder().append(amount).append(",")
 				.append(l.getAddress().getWif()).append(",").append(l.getHeight())
-				.toString().getBytes();
+				.toString();
+			String data = Hex.encodeHexString(stringData.getBytes());
 			List<String> signs = new ArrayList<>();
-			byte[] signatureOne = signatures.get(0).sign(data);
-			signs.add(signatureOne.toString());
-			byte[] signatureTwo = signatures.get(0).sign(data);
-			signs.add(signatureTwo.toString());
+			byte[] signatureOne = signatures.get(0).sign(Hex.decodeHex(data));
+			signs.add(Hex.encodeHexString(signatureOne));
+			byte[] signatureTwo = signatures.get(1).sign(Hex.decodeHex(data));
+			signs.add(Hex.encodeHexString(signatureTwo));
 			GrowMint growMint = GrowMint.builder().amount(amount).signatures(signs)
-				.data(data.toString()).build();
+				.data(data).build();
 			final Response putResponse = client.putWithHeaders(url + l.getAddress().getWif() + "/" + l.getHeight(),
 				Entity.json(growMint), new MultivaluedHashMap(Map.of("privateKey",
 				signatures.get(0).getPrivateKey()))
@@ -108,6 +110,8 @@ public class MintStorageResourceTest extends BaseRestClientTest {
 		if (newMints > 0) {
 			final MintStorage.SporkData data = client.getEntity(url, MintStorage.class).getData();
 			assertThat(data.getMints().size(), equalTo(originalNumMints + newMints));
+		} else {
+			assert(false);
 		}
 	}
 

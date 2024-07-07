@@ -29,6 +29,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -68,7 +69,7 @@ public class GridSpork implements Serializable, Signable {
 	@Getter
 	private byte[] signature;
 	@Getter
-	private List<byte[]> signatures;
+	private List<byte[]> signatures = new ArrayList<>();
 
 	@AllArgsConstructor
 	public enum Flag {

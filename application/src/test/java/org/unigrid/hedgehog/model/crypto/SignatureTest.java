@@ -122,6 +122,10 @@ public class SignatureTest extends BaseMockedWeldTest {
 		for (Signature s : SIGNATURES) {
 			signs.add(s.sign(data));
 		}
+		
+		for (byte[] b : signs) {
+			System.out.println(b.toString());
+		}
 
 		return signature.verifyMultiple(data, signs);
 	}

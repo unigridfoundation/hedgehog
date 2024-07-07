@@ -25,21 +25,39 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Slf4j
 public class ValidatorGrow {
 	private String pubKey;
 	private String data;
 	private List<String> signatures;
 
-	public List<byte[]> getSignatures() {
+	public List<byte[]> getByteSignatures() {
 		List<byte[]> signs = new ArrayList<>();
 		for (String s : signatures) {
-			signs.add(s.getBytes());
+			try {
+				signs.add(Hex.decodeHex(s));
+			} catch (DecoderException ex) {
+				log.atError().log(ex.getMessage());
+			}
 		}
 		return signs;
+	}
+
+	public byte[] getByteData() {
+		try {
+			return Hex.decodeHex(data);
+		} catch (DecoderException ex) {
+			log.atError().log(ex.getMessage());
+			String s = "";
+			return s.getBytes();
+		}
 	}
 }

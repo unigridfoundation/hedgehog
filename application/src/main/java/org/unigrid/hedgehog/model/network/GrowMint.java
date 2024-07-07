@@ -22,25 +22,46 @@ package org.unigrid.hedgehog.model.network;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Slf4j
 public class GrowMint {
 	private BigDecimal amount;
 	private List<String> signatures;
 	private String data;
 
-	public List<byte[]> getSignatures() {
+	public List<byte[]> getByteSignatures() {
 		List<byte[]> signs = new ArrayList<>();
 		for (String s : signatures) {
-			signs.add(s.getBytes());
+			try {
+				signs.add(Hex.decodeHex(s));
+			} catch (DecoderException ex) {
+				log.atError().log(ex.getMessage());
+			}
 		}
 		return signs;
+	}
+
+	public byte[] getByteData() {
+		try {
+			return Hex.decodeHex(data);
+		} catch (DecoderException ex) {
+			log.atError().log(ex.getMessage());
+			String s = "";
+			return s.getBytes();
+		}
 	}
 }

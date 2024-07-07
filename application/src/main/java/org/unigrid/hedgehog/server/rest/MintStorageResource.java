@@ -106,7 +106,7 @@ public class MintStorageResource extends CDIBridgeResource {
 		@NotNull @PathParam("height") int height, @NotNull @HeaderParam("privateKey") String privateKey) {
 		try {
 			Signature signature = new Signature(Optional.of(privateKey), Optional.empty());
-			if (signature.verifyMultiple(growMint.getData().getBytes(), growMint.getSignatures())
+			if (signature.verifyMultiple(growMint.getByteData(), growMint.getByteSignatures())
 				&& Objects.nonNull(privateKey) && NetworkKey.isTrusted(privateKey)) {
 				final MintStorage ms = ResourceHelper.getNewOrClonedSporkSection(
 					() -> sporkDatabase.getMintStorage(),
@@ -124,7 +124,7 @@ public class MintStorageResource extends CDIBridgeResource {
 				ms.archive();
 				sporkData.getMints().put(location, growMint.getAmount());
 
-				return ResourceHelper.commitAndSign(ms, growMint.getSignatures(), sporkDatabase,
+				return ResourceHelper.commitAndSign(ms, growMint.getByteSignatures(), sporkDatabase,
 					isUpdate, signable -> {
 						sporkDatabase.setMintStorage(signable);
 
