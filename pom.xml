@@ -10,9 +10,9 @@
 		<surefireArgLine />
 	</properties>
 	<scm>
-		<developerConnection>scm:git:https://github.com/unigrid-project/hedgehog.git</developerConnection>
-	  <tag>HEAD</tag>
-  </scm>
+		<developerConnection>scm:git:https://github.com/unigridfoundation/hedgehog.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
 	<modules>
 		<module>application</module>
 		<module>common</module>
